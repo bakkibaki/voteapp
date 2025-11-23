@@ -6,6 +6,7 @@ import { ThumbsUp, MessageCircle, Plus, Check, Search } from 'lucide-react';
 import { Vote } from '@/lib/types';
 import { hasUser, getCurrentUser } from '@/lib/user';
 import UserSetupModal from '@/components/UserSetupModal';
+import AdBanner from '@/components/AdBanner';
 import { getRelativeTime } from '@/lib/dateUtils';
 
 const CATEGORIES = ['すべて', 'ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
@@ -213,8 +214,10 @@ export default function Home() {
               )}
             </div>
           ) : (
-            filteredPolls.map((poll) => {
-              const totalVotes = getTotalVotes(poll);
+            <>
+              {filteredPolls.map((poll, index) => {
+                const totalVotes = getTotalVotes(poll);
+                const showAd = (index + 1) % 3 === 0 && index !== filteredPolls.length - 1;
 
               return (
                 <div key={poll.id} className="bg-gray-900 rounded-xl border border-gray-800 hover:border-cyan-500/50 transition-all overflow-hidden group">
@@ -292,8 +295,19 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+                {showAd && (
+                  <div key={`ad-${index}`}>
+                    <AdBanner
+                      dataAdSlot="1234567890"
+                      dataAdFormat="auto"
+                      dataFullWidthResponsive={true}
+                    />
+                  </div>
+                )}
+              </>
               );
-            })
+            })}</>
+
           )}
         </div>
       </div>
