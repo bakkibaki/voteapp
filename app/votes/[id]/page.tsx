@@ -369,7 +369,7 @@ export default function VoteDetailPage() {
           </div>
         )}
 
-        {getCurrentUser()?.id === vote.authorId && vote.showAnalytics !== false && (
+        {hasVoted && vote.showAnalytics !== false && (
           <AnalyticsSection vote={vote} />
         )}
       </div>

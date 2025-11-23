@@ -103,9 +103,6 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 className="text-cyan-400" size={24} />
         <h2 className="text-xl font-bold text-white">属性別分析</h2>
-        <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-full font-medium border border-cyan-500/30">
-          作成者限定
-        </span>
       </div>
 
       {/* 年代別分析 */}
@@ -133,10 +130,10 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
                       <div key={idx} className="flex items-center gap-2">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-600">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-gray-900">{percentage}%</span>
+                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
+                            <span className="text-sm font-medium text-white">{percentage}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
                             <div
                               className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
                               style={{ width: percentage + '%' }}
@@ -155,16 +152,16 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
 
       {/* 性別分析 */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">性別</h3>
+        <h3 className="text-lg font-semibold text-white mb-3">性別</h3>
         <div className="space-y-3">
           {GENDERS.map((gender) => {
             const total = getTotalForGroup(gender, 'gender');
             if (total === 0) return null;
 
             return (
-              <div key={gender} className="border rounded-lg p-4">
+              <div key={gender} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700">{gender}</span>
+                  <span className="font-semibold text-white">{gender}</span>
                   <span className="text-sm text-gray-500">{total}人</span>
                 </div>
                 <div className="space-y-2">
@@ -178,10 +175,10 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
                       <div key={idx} className="flex items-center gap-2">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-600">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-gray-900">{percentage}%</span>
+                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
+                            <span className="text-sm font-medium text-white">{percentage}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
                             <div
                               className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
                               style={{ width: percentage + '%' }}
@@ -200,16 +197,16 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
 
       {/* 地域別分析 */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">地域</h3>
+        <h3 className="text-lg font-semibold text-white mb-3">地域</h3>
         <div className="space-y-3">
           {REGIONS.map((region) => {
             const total = getTotalForGroup(region, 'region');
             if (total === 0) return null;
 
             return (
-              <div key={region} className="border rounded-lg p-4">
+              <div key={region} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700">{region}</span>
+                  <span className="font-semibold text-white">{region}</span>
                   <span className="text-sm text-gray-500">{total}人</span>
                 </div>
                 <div className="space-y-2">
@@ -223,10 +220,10 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
                       <div key={idx} className="flex items-center gap-2">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-600">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-gray-900">{percentage}%</span>
+                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
+                            <span className="text-sm font-medium text-white">{percentage}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
                             <div
                               className="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full transition-all"
                               style={{ width: percentage + '%' }}
@@ -245,16 +242,16 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
 
       {/* 職業別分析 */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">職業</h3>
+        <h3 className="text-lg font-semibold text-white mb-3">職業</h3>
         <div className="space-y-3">
           {OCCUPATIONS.map((occupation) => {
             const total = getTotalForGroup(occupation, 'occupation');
             if (total === 0) return null;
 
             return (
-              <div key={occupation} className="border rounded-lg p-4">
+              <div key={occupation} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700">{occupation}</span>
+                  <span className="font-semibold text-white">{occupation}</span>
                   <span className="text-sm text-gray-500">{total}人</span>
                 </div>
                 <div className="space-y-2">
@@ -268,10 +265,10 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
                       <div key={idx} className="flex items-center gap-2">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-600">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-gray-900">{percentage}%</span>
+                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
+                            <span className="text-sm font-medium text-white">{percentage}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
                             <div
                               className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all"
                               style={{ width: percentage + '%' }}
