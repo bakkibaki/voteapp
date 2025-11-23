@@ -8,7 +8,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { optionId, userId, age, gender } = body;
+    const { optionId, userId, age, gender, region, occupation } = body;
 
     if (!optionId) {
       return NextResponse.json(
@@ -54,6 +54,8 @@ export async function POST(
       optionId,
       age,
       gender,
+      region,
+      occupation,
       timestamp: new Date().toISOString(),
     });
 

@@ -25,7 +25,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, userName, userAvatar, content, parentId, voteChanged } = body;
+    const { userId, userName, userAvatar, content, parentId, voteChanged, votedOptionText } = body;
 
     if (!userId || !userName || !content) {
       return NextResponse.json(
@@ -45,6 +45,7 @@ export async function POST(
       likes: [],
       createdAt: new Date().toISOString(),
       voteChanged,
+      votedOptionText,
     };
 
     const createdComment = await createComment(comment);

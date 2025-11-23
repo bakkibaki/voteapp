@@ -6,6 +6,7 @@ import { ThumbsUp, MessageCircle, Plus, Check, Search } from 'lucide-react';
 import { Vote } from '@/lib/types';
 import { hasUser, getCurrentUser } from '@/lib/user';
 import UserSetupModal from '@/components/UserSetupModal';
+import { getRelativeTime } from '@/lib/dateUtils';
 
 const CATEGORIES = ['すべて', 'ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
 
@@ -24,6 +25,11 @@ export default function Home() {
     fetchPolls();
     if (!hasUser()) {
       setShowUserSetup(true);
+    }
+    // localStorageから投票履歴を読み込む
+    const savedVotes = localStorage.getItem('userVotes');
+    if (savedVotes) {
+      setUserVotes(JSON.parse(savedVotes));
     }
   }, []);
 
@@ -67,11 +73,16 @@ export default function Home() {
           userId: currentUser?.id,
           age: currentUser?.age,
           gender: currentUser?.gender,
+          region: currentUser?.region,
+          occupation: currentUser?.occupation,
         }),
       });
 
       if (response.ok) {
-        setUserVotes({ ...userVotes, [pollId]: optionId });
+        const updatedVotes = { ...userVotes, [pollId]: optionId };
+        setUserVotes(updatedVotes);
+        // localStorageに保存
+        localStorage.setItem('userVotes', JSON.stringify(updatedVotes));
         await fetchPolls();
       }
     } catch (error) {
@@ -100,8 +111,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <p className="text-gray-600">読み込み中...</p>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-gray-400">読み込み中...</p>
       </div>
     );
   }
@@ -119,10 +130,10 @@ export default function Home() {
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-black">
+      <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
             vote
           </h1>
           <div className="flex items-center gap-3">
@@ -137,7 +148,7 @@ export default function Home() {
             )}
             <button
               onClick={() => router.push('/create')}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full hover:shadow-lg transition-all"
+              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-4 py-2 rounded-full hover:shadow-xl hover:shadow-purple-500/50 transition-all font-semibold"
             >
               <Plus size={20} />
               投票を作成
@@ -147,26 +158,26 @@ export default function Home() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 pb-8 mt-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 mb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <input
               type="text"
               placeholder="投票を検索（タイトル、カテゴリー、作成者）"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full pl-10 pr-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500"
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 mb-6">
           <div className="flex gap-2 overflow-x-auto">
             {CATEGORIES.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={'px-4 py-2 rounded-full whitespace-nowrap transition ' + (selectedCategory === category ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+                className={'px-4 py-2 rounded-full whitespace-nowrap transition font-medium ' + (selectedCategory === category ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-lg shadow-purple-500/30' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700')}
               >
                 {category}
               </button>
@@ -176,8 +187,8 @@ export default function Home() {
 
         <div className="space-y-4">
           {filteredPolls.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <p className="text-gray-600 mb-4">
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+              <p className="text-gray-400 mb-4">
                 {searchQuery || selectedCategory !== 'すべて'
                   ? '検索結果が見つかりません'
                   : 'まだ投票がありません'}
@@ -188,14 +199,14 @@ export default function Home() {
                     setSearchQuery('');
                     setSelectedCategory('すべて');
                   }}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-cyan-400 hover:text-cyan-300 font-medium"
                 >
                   フィルタをクリア
                 </button>
               ) : (
                 <button
                   onClick={() => router.push('/create')}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-cyan-400 hover:text-cyan-300 font-medium"
                 >
                   最初の投票を作成する
                 </button>
@@ -206,19 +217,19 @@ export default function Home() {
               const totalVotes = getTotalVotes(poll);
 
               return (
-                <div key={poll.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
+                <div key={poll.id} className="bg-gray-900 rounded-xl border border-gray-800 hover:border-cyan-500/50 transition-all overflow-hidden group">
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                      <span className="text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">
                         {poll.category || 'その他'}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {new Date(poll.createdAt).toLocaleDateString('ja-JP')}
+                        {getRelativeTime(poll.createdAt)}
                       </span>
                     </div>
 
                     <h3
-                      className="text-lg font-bold text-gray-900 mb-4 cursor-pointer hover:text-blue-600"
+                      className="text-lg font-bold text-white mb-4 cursor-pointer group-hover:text-cyan-400 transition"
                       onClick={() => router.push(`/votes/${poll.id}`)}
                     >
                       {poll.title}
@@ -232,15 +243,15 @@ export default function Home() {
                             return (
                               <div key={option.id} className="relative">
                                 <div
-                                  className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg transition-all duration-300"
+                                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg transition-all duration-300 border border-cyan-500/30"
                                   style={{ width: percentage + '%' }}
                                 />
                                 <div className="relative px-4 py-3 flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    {userVotes[poll.id] === option.id && <Check size={16} className="text-blue-600" />}
-                                    <span className="text-sm font-medium text-gray-700">{option.text}</span>
+                                    {userVotes[poll.id] === option.id && <Check size={16} className="text-cyan-400" />}
+                                    <span className="text-sm font-medium text-gray-200">{option.text}</span>
                                   </div>
-                                  <span className="text-sm font-bold text-gray-900">{percentage}%</span>
+                                  <span className="text-sm font-bold text-white">{percentage}%</span>
                                 </div>
                               </div>
                             );
@@ -252,13 +263,13 @@ export default function Home() {
                             <button
                               key={option.id}
                               onClick={() => handleVote(poll.id, option.id)}
-                              className="w-full text-left bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-400 rounded-lg px-4 py-3 transition-all"
+                              className="w-full text-left bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-cyan-500 rounded-lg px-4 py-3 transition-all"
                             >
-                              <span className="text-sm font-medium text-gray-700">{option.text}</span>
+                              <span className="text-sm font-medium text-gray-200">{option.text}</span>
                             </button>
                           ))}
                           <div className="text-center text-xs text-gray-500 mt-2">
-                            <span className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full font-medium">
+                            <span className="bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-full font-medium border border-yellow-500/30">
                               💡 選択肢をクリックして投票
                             </span>
                           </div>
@@ -266,17 +277,17 @@ export default function Home() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-600 pt-3 border-t">
+                    <div className="flex items-center gap-4 text-sm text-gray-400 pt-3 border-t border-gray-800">
                       <span className="flex items-center gap-1">
                         <ThumbsUp size={16} />
                         {totalVotes.toLocaleString()}人
                       </span>
                       <button
                         onClick={() => router.push(`/votes/${poll.id}`)}
-                        className="flex items-center gap-1 hover:text-blue-600"
+                        className="flex items-center gap-1 hover:text-cyan-400 transition"
                       >
                         <MessageCircle size={16} />
-                        詳細を見る
+                        {poll.commentCount || 0}件のコメント
                       </button>
                     </div>
                   </div>
@@ -288,22 +299,22 @@ export default function Home() {
       </div>
 
       {showChangeWarning && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-bold mb-2">投票を変更しますか？</h3>
-            <p className="text-gray-600 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-bold mb-2 text-white">投票を変更しますか？</h3>
+            <p className="text-gray-400 mb-4">
               既に投票済みです。投票を変更してもよろしいですか？
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowChangeWarning(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 text-gray-300 transition"
               >
                 キャンセル
               </button>
               <button
                 onClick={confirmVoteChange}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition font-semibold"
               >
                 変更する
               </button>

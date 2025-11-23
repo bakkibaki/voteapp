@@ -23,6 +23,7 @@ export async function getAllComments(): Promise<Comment[]> {
     likes: comment.likes || [],
     createdAt: comment.created_at,
     voteChanged: comment.vote_changed || false,
+    votedOptionText: comment.voted_option_text,
   }));
 }
 
@@ -49,6 +50,7 @@ export async function getCommentsByVoteId(voteId: string): Promise<Comment[]> {
     likes: comment.likes || [],
     createdAt: comment.created_at,
     voteChanged: comment.vote_changed || false,
+    votedOptionText: comment.voted_option_text,
   }));
 }
 
@@ -66,6 +68,7 @@ export async function createComment(comment: Comment): Promise<Comment> {
       likes: comment.likes || [],
       created_at: comment.createdAt,
       vote_changed: comment.voteChanged || false,
+      voted_option_text: comment.votedOptionText,
     }])
     .select()
     .single();
@@ -86,6 +89,7 @@ export async function createComment(comment: Comment): Promise<Comment> {
     likes: data.likes || [],
     createdAt: data.created_at,
     voteChanged: data.vote_changed || false,
+    votedOptionText: data.voted_option_text,
   };
 }
 
@@ -141,5 +145,6 @@ export async function toggleCommentLike(
     likes: data.likes || [],
     createdAt: data.created_at,
     voteChanged: data.vote_changed || false,
+    votedOptionText: data.voted_option_text,
   };
 }

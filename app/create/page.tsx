@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Send } from "lucide-react";
 import { getCurrentUser } from "@/lib/user";
+import { suggestCategory } from "@/lib/categoryUtils";
 
 const CATEGORIES = ['ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
 
@@ -12,7 +13,15 @@ export default function CreateVotePage() {
   const [title, setTitle] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [category, setCategory] = useState("その他");
+  const [showAnalytics, setShowAnalytics] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (title.trim()) {
+      const suggested = suggestCategory(title);
+      setCategory(suggested);
+    }
+  }, [title]);
 
   const addOption = () => {
     setOptions([...options, ""]);
@@ -56,6 +65,7 @@ export default function CreateVotePage() {
           category,
           authorId: currentUser?.id,
           authorName: currentUser?.name,
+          showAnalytics,
         }),
       });
 
@@ -72,10 +82,10 @@ export default function CreateVotePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-black">
+      <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
             vote
           </h1>
           <div className="flex items-center gap-3">
@@ -90,7 +100,7 @@ export default function CreateVotePage() {
             )}
             <button
               onClick={() => router.push("/")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition font-semibold"
             >
               <ArrowLeft size={20} />
               ホームに戻る
@@ -100,8 +110,8 @@ export default function CreateVotePage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-8">
+          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
             投票を作成
           </h2>
 
@@ -109,7 +119,7 @@ export default function CreateVotePage() {
             <div>
               <label
                 htmlFor="title"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-300 mb-2"
               >
                 投票のタイトル
               </label>
@@ -119,7 +129,7 @@ export default function CreateVotePage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500"
                 placeholder="例: 朝食は和食派？洋食派？"
               />
             </div>
@@ -127,7 +137,7 @@ export default function CreateVotePage() {
             <div>
               <label
                 htmlFor="category"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-300 mb-2"
               >
                 カテゴリー
               </label>
@@ -135,7 +145,7 @@ export default function CreateVotePage() {
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -146,7 +156,24 @@ export default function CreateVotePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAnalytics}
+                  onChange={(e) => setShowAnalytics(e.target.checked)}
+                  className="w-4 h-4 text-cyan-500 bg-gray-800 border-gray-700 rounded focus:ring-cyan-500 focus:ring-2"
+                />
+                <span className="text-sm font-semibold text-gray-300">
+                  属性別分析を表示する（年代・性別・地域・職業の投票割合を表示）
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                オフにすると、投票者の属性情報が他のユーザーに表示されません
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
                 選択肢（2つ以上）
               </label>
               <div className="space-y-3">
@@ -156,14 +183,14 @@ export default function CreateVotePage() {
                       type="text"
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
-                      className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="flex-1 px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500"
                       placeholder={`選択肢 ${index + 1}`}
                     />
                     {options.length > 2 && (
                       <button
                         type="button"
                         onClick={() => removeOption(index)}
-                        className="px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition flex items-center gap-2"
+                        className="px-4 py-3 bg-red-500/10 text-red-500 border border-red-500/30 rounded-xl hover:bg-red-500/20 transition flex items-center gap-2"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -174,7 +201,7 @@ export default function CreateVotePage() {
               <button
                 type="button"
                 onClick={addOption}
-                className="mt-3 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition flex items-center gap-2 font-medium"
+                className="mt-3 px-4 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/20 transition flex items-center gap-2 font-medium"
               >
                 <Plus size={18} />
                 選択肢を追加
@@ -184,7 +211,7 @@ export default function CreateVotePage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold"
+              className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-xl hover:shadow-xl hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold"
             >
               {isSubmitting ? (
                 "作成中..."

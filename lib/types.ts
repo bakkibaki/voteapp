@@ -9,6 +9,8 @@ export interface VoteRecord {
   optionId: string;
   age?: string;
   gender?: string;
+  region?: string;
+  occupation?: string;
   timestamp: string;
 }
 
@@ -21,6 +23,8 @@ export interface Vote {
   authorId?: string;
   authorName?: string;
   voteRecords?: VoteRecord[];
+  showAnalytics?: boolean;
+  commentCount?: number;
 }
 
 export interface VotesData {
@@ -36,6 +40,8 @@ export interface User {
   joinedDate: string;
   age?: string;
   gender?: string;
+  region?: string;
+  occupation?: string;
 }
 
 export interface Comment {
@@ -49,6 +55,7 @@ export interface Comment {
   likes: string[];
   createdAt: string;
   voteChanged?: boolean;
+  votedOptionText?: string;
 }
 
 export interface CommentsData {

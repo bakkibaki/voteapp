@@ -4,12 +4,15 @@ import { useState, useEffect } from "react";
 import { MessageCircle, Heart, Reply, Send, X } from "lucide-react";
 import { Comment } from "@/lib/types";
 import { getCurrentUser } from "@/lib/user";
+import { getRelativeTime } from "@/lib/dateUtils";
 
 interface CommentSectionProps {
   voteId: string;
+  userVotedOptionText?: string;
+  onCommentCountChange?: (count: number) => void;
 }
 
-export default function CommentSection({ voteId }: CommentSectionProps) {
+export default function CommentSection({ voteId, userVotedOptionText, onCommentCountChange }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
@@ -28,6 +31,9 @@ export default function CommentSection({ voteId }: CommentSectionProps) {
       if (response.ok) {
         const data = await response.json();
         setComments(data);
+        if (onCommentCountChange) {
+          onCommentCountChange(data.length);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch comments:", error);
@@ -53,6 +59,7 @@ export default function CommentSection({ voteId }: CommentSectionProps) {
           userAvatar: currentUser.avatar,
           content: newComment,
           parentId: replyTo?.id,
+          votedOptionText: userVotedOptionText,
         }),
       });
 
@@ -104,13 +111,18 @@ export default function CommentSection({ voteId }: CommentSectionProps) {
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-sm">{comment.userName}</span>
+                {comment.votedOptionText && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                    {comment.votedOptionText}派
+                  </span>
+                )}
                 {comment.voteChanged && (
                   <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
                     投票変更
                   </span>
                 )}
                 <span className="text-xs text-gray-500">
-                  {new Date(comment.createdAt).toLocaleDateString("ja-JP")}
+                  {getRelativeTime(comment.createdAt)}
                 </span>
               </div>
               <p className="text-sm text-gray-800">{comment.content}</p>
@@ -125,7 +137,9 @@ export default function CommentSection({ voteId }: CommentSectionProps) {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Heart size={16} fill={isLiked ? "currentColor" : "none"} />
-                {comment.likes.length > 0 && <span>{comment.likes.length}</span>}
+                {comment.likes.length > 0 && (
+                  <span className="text-red-500 font-semibold">{comment.likes.length}</span>
+                )}
               </button>
 
               {!isReply && (
@@ -198,7 +212,7 @@ export default function CommentSection({ voteId }: CommentSectionProps) {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="コメントを追加..."
-                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-900"
               />
               <button
                 type="submit"

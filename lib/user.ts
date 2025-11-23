@@ -29,7 +29,15 @@ export function getCurrentUser(): User | null {
   }
 }
 
-export function createUser(name: string, username: string, avatar: string, age?: string, gender?: string): User {
+export function createUser(
+  name: string,
+  username: string,
+  avatar: string,
+  age?: string,
+  gender?: string,
+  region?: string,
+  occupation?: string
+): User {
   const user: User = {
     id: `user_${Date.now()}`,
     name,
@@ -38,6 +46,8 @@ export function createUser(name: string, username: string, avatar: string, age?:
     joinedDate: new Date().toISOString(),
     age,
     gender,
+    region,
+    occupation,
   };
 
   if (typeof window !== "undefined") {
