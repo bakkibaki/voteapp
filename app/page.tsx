@@ -312,6 +312,25 @@ export default function Home() {
         </div>
       </div>
 
+      <footer className="bg-gray-900 border-t border-gray-800 mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 mb-4">
+            <a href="/privacy" className="hover:text-cyan-400 transition">
+              プライバシーポリシー
+            </a>
+            <a href="/terms" className="hover:text-cyan-400 transition">
+              利用規約
+            </a>
+            <a href="/contact" className="hover:text-cyan-400 transition">
+              お問い合わせ
+            </a>
+          </div>
+          <div className="text-center text-xs text-gray-500">
+            © 2025 vote. All rights reserved.
+          </div>
+        </div>
+      </footer>
+
       {showChangeWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm mx-4">
