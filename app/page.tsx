@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { ThumbsUp, MessageCircle, Plus, Check, Search } from 'lucide-react';
 import { Vote } from '@/lib/types';
 import { hasUser, getCurrentUser } from '@/lib/user';
-import UserSetupModal from '@/components/UserSetupModal';
 import AdBanner from '@/components/AdBanner';
 import { getRelativeTime } from '@/lib/dateUtils';
 
@@ -18,15 +17,11 @@ export default function Home() {
   const [showChangeWarning, setShowChangeWarning] = useState(false);
   const [pendingVote, setPendingVote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showUserSetup, setShowUserSetup] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('すべて');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchPolls();
-    if (!hasUser()) {
-      setShowUserSetup(true);
-    }
     // localStorageから投票履歴を読み込む
     const savedVotes = localStorage.getItem('userVotes');
     if (savedVotes) {
@@ -119,6 +114,7 @@ export default function Home() {
   }
 
   const filteredPolls = polls
+    .filter((poll) => !poll.isPrivate) // プライベート投票は一覧に表示しない
     .filter((poll) => selectedCategory === 'すべて' || poll.category === selectedCategory)
     .filter((poll) => {
       if (!searchQuery) return true;
@@ -356,13 +352,6 @@ export default function Home() {
         </div>
       )}
 
-      {showUserSetup && (
-        <UserSetupModal
-          onComplete={() => {
-            setShowUserSetup(false);
-          }}
-        />
-      )}
     </div>
   );
 }

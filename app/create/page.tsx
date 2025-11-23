@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Send } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Send, Lock } from "lucide-react";
 import { getCurrentUser } from "@/lib/user";
 import { suggestCategory } from "@/lib/categoryUtils";
+import { CustomQuestion } from "@/lib/types";
 
 const CATEGORIES = ['ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
+
+interface CustomQuestionBuilder extends CustomQuestion {
+  options: string[];
+}
 
 export default function CreateVotePage() {
   const router = useRouter();
@@ -14,6 +19,8 @@ export default function CreateVotePage() {
   const [options, setOptions] = useState(["", ""]);
   const [category, setCategory] = useState("その他");
   const [showAnalytics, setShowAnalytics] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState<CustomQuestionBuilder[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -39,6 +46,54 @@ export default function CreateVotePage() {
     setOptions(newOptions);
   };
 
+  // カスタム質問の管理
+  const addCustomQuestion = () => {
+    setCustomQuestions([
+      ...customQuestions,
+      {
+        id: `q-${Date.now()}`,
+        question: "",
+        options: ["", ""],
+      },
+    ]);
+  };
+
+  const removeCustomQuestion = (index: number) => {
+    setCustomQuestions(customQuestions.filter((_, i) => i !== index));
+  };
+
+  const updateCustomQuestion = (index: number, question: string) => {
+    const newQuestions = [...customQuestions];
+    newQuestions[index].question = question;
+    setCustomQuestions(newQuestions);
+  };
+
+  const addCustomQuestionOption = (questionIndex: number) => {
+    const newQuestions = [...customQuestions];
+    newQuestions[questionIndex].options.push("");
+    setCustomQuestions(newQuestions);
+  };
+
+  const removeCustomQuestionOption = (questionIndex: number, optionIndex: number) => {
+    const newQuestions = [...customQuestions];
+    if (newQuestions[questionIndex].options.length > 2) {
+      newQuestions[questionIndex].options = newQuestions[questionIndex].options.filter(
+        (_, i) => i !== optionIndex
+      );
+      setCustomQuestions(newQuestions);
+    }
+  };
+
+  const updateCustomQuestionOption = (
+    questionIndex: number,
+    optionIndex: number,
+    value: string
+  ) => {
+    const newQuestions = [...customQuestions];
+    newQuestions[questionIndex].options[optionIndex] = value;
+    setCustomQuestions(newQuestions);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -48,6 +103,25 @@ export default function CreateVotePage() {
 
       if (validOptions.length < 2) {
         alert("少なくとも2つの選択肢を入力してください");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // カスタム質問のバリデーション
+      const validCustomQuestions = customQuestions
+        .filter((q) => q.question.trim() !== "")
+        .map((q) => ({
+          ...q,
+          options: q.options.filter((opt) => opt.trim() !== ""),
+        }))
+        .filter((q) => q.options.length >= 2);
+
+      // 不完全な質問がある場合は警告
+      const incompleteQuestions = customQuestions.filter(
+        (q) => q.question.trim() !== "" && q.options.filter((opt) => opt.trim() !== "").length < 2
+      );
+      if (incompleteQuestions.length > 0) {
+        alert("各質問には少なくとも2つの選択肢を入力してください");
         setIsSubmitting(false);
         return;
       }
@@ -66,6 +140,8 @@ export default function CreateVotePage() {
           authorId: currentUser?.id,
           authorName: currentUser?.name,
           showAnalytics,
+          isPrivate,
+          customQuestions: validCustomQuestions.length > 0 ? validCustomQuestions : undefined,
         }),
       });
 
@@ -159,12 +235,30 @@ export default function CreateVotePage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  className="w-4 h-4 text-cyan-500 bg-gray-800 border-gray-700 rounded focus:ring-cyan-500 focus:ring-2"
+                />
+                <span className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                  <Lock size={16} />
+                  プライベートモード
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                オンにすると、URLを知っている人だけが投票にアクセスできます
+              </p>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
                   checked={showAnalytics}
                   onChange={(e) => setShowAnalytics(e.target.checked)}
                   className="w-4 h-4 text-cyan-500 bg-gray-800 border-gray-700 rounded focus:ring-cyan-500 focus:ring-2"
                 />
                 <span className="text-sm font-semibold text-gray-300">
-                  属性別分析を表示する（年代・性別・地域・職業の投票割合を表示）
+                  属性別分析を表示する
                 </span>
               </label>
               <p className="text-xs text-gray-500 mt-1 ml-6">
@@ -205,6 +299,91 @@ export default function CreateVotePage() {
               >
                 <Plus size={18} />
                 選択肢を追加
+              </button>
+            </div>
+
+            {/* カスタム質問セクション */}
+            <div className="border-t border-gray-800 pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-300">
+                    カスタム属性質問（オプション）
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    投票者に質問したい属性を自由に設定できます（例：年代、性別、地域など）
+                  </p>
+                </div>
+              </div>
+
+              {customQuestions.length > 0 && (
+                <div className="space-y-4 mb-4">
+                  {customQuestions.map((question, qIndex) => (
+                    <div
+                      key={question.id}
+                      className="bg-gray-800 border border-gray-700 rounded-xl p-4"
+                    >
+                      <div className="flex items-start gap-2 mb-3">
+                        <input
+                          type="text"
+                          value={question.question}
+                          onChange={(e) => updateCustomQuestion(qIndex, e.target.value)}
+                          placeholder={`質問 ${qIndex + 1}（例：年代を教えてください）`}
+                          className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCustomQuestion(qIndex)}
+                          className="px-3 py-2 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs text-gray-400 font-medium">選択肢</label>
+                        {question.options.map((option, oIndex) => (
+                          <div key={oIndex} className="flex gap-2">
+                            <input
+                              type="text"
+                              value={option}
+                              onChange={(e) =>
+                                updateCustomQuestionOption(qIndex, oIndex, e.target.value)
+                              }
+                              placeholder={`選択肢 ${oIndex + 1}（例：10代、20代、30代...）`}
+                              className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500 text-sm"
+                            />
+                            {question.options.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => removeCustomQuestionOption(qIndex, oIndex)}
+                                className="px-3 py-2 text-gray-500 hover:text-red-500 transition"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addCustomQuestionOption(qIndex)}
+                          className="text-xs px-3 py-1.5 text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1"
+                        >
+                          <Plus size={14} />
+                          選択肢を追加
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={addCustomQuestion}
+                className="px-4 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-xl hover:bg-purple-500/20 transition flex items-center gap-2 font-medium"
+              >
+                <Plus size={18} />
+                質問を追加
               </button>
             </div>
 

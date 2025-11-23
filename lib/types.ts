@@ -4,13 +4,22 @@ export interface VoteOption {
   votes: number;
 }
 
+export interface CustomQuestion {
+  id: string;
+  question: string;
+  options: string[];
+}
+
 export interface VoteRecord {
   userId: string;
   optionId: string;
+  // 旧形式の属性（後方互換性のため保持）
   age?: string;
   gender?: string;
   region?: string;
   occupation?: string;
+  // 新形式：カスタム質問への回答 { questionId: answer }
+  customAttributes?: Record<string, string>;
   timestamp: string;
 }
 
@@ -25,6 +34,8 @@ export interface Vote {
   voteRecords?: VoteRecord[];
   showAnalytics?: boolean;
   commentCount?: number;
+  isPrivate?: boolean;
+  customQuestions?: CustomQuestion[];
 }
 
 export interface VotesData {

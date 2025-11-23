@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, options, category, authorId, authorName, showAnalytics } = body;
+    const { title, options, category, authorId, authorName, showAnalytics, isPrivate, customQuestions } = body;
 
     if (!title || !options || !Array.isArray(options) || options.length < 2) {
       return NextResponse.json(
@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
       authorId,
       authorName,
       showAnalytics: showAnalytics !== undefined ? showAnalytics : true,
+      isPrivate: isPrivate || false,
+      customQuestions: customQuestions || undefined,
     };
 
     const createdVote = await createVote(vote);

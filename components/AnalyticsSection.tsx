@@ -1,6 +1,6 @@
 "use client";
 
-import { Vote, VoteRecord } from "@/lib/types";
+import { Vote, VoteRecord, CustomQuestion } from "@/lib/types";
 import { BarChart3 } from "lucide-react";
 
 interface AnalyticsSectionProps {
@@ -25,66 +25,88 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
     );
   }
 
-  // 年代別の集計
-  const ageAnalytics = vote.options.map((option) => {
-    const optionRecords = vote.voteRecords?.filter(r => r.optionId === option.id) || [];
-    const ageBreakdown: Record<string, number> = {};
+  // カスタム質問がある場合
+  if (vote.customQuestions && vote.customQuestions.length > 0) {
+    return (
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6 mt-4">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="text-cyan-400" size={24} />
+          <h2 className="text-xl font-bold text-white">属性別分析</h2>
+        </div>
 
-    AGE_GROUPS.forEach(age => {
-      ageBreakdown[age] = optionRecords.filter(r => r.age === age).length;
-    });
+        {vote.customQuestions.map((question, qIdx) => {
+          const colors = [
+            'from-blue-500 to-purple-500',
+            'from-pink-500 to-rose-500',
+            'from-green-500 to-teal-500',
+            'from-orange-500 to-red-500',
+            'from-cyan-500 to-blue-500',
+            'from-amber-500 to-orange-500',
+          ];
+          const color = colors[qIdx % colors.length];
 
-    return {
-      optionText: option.text,
-      breakdown: ageBreakdown,
-    };
-  });
+          return (
+            <div key={question.id}>
+              <h3 className="text-lg font-semibold text-white mb-3">{question.question}</h3>
+              <div className="space-y-3">
+                {question.options.map((option) => {
+                  // この属性を選択した人の数
+                  const total = vote.voteRecords?.filter(
+                    (r) => r.customAttributes?.[question.id] === option
+                  ).length || 0;
 
-  // 性別の集計
-  const genderAnalytics = vote.options.map((option) => {
-    const optionRecords = vote.voteRecords?.filter(r => r.optionId === option.id) || [];
-    const genderBreakdown: Record<string, number> = {};
+                  if (total === 0) return null;
 
-    GENDERS.forEach(gender => {
-      genderBreakdown[gender] = optionRecords.filter(r => r.gender === gender).length;
-    });
+                  // 各投票選択肢ごとの内訳
+                  const analytics = vote.options.map((voteOption) => {
+                    const count = vote.voteRecords?.filter(
+                      (r) => r.optionId === voteOption.id && r.customAttributes?.[question.id] === option
+                    ).length || 0;
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
 
-    return {
-      optionText: option.text,
-      breakdown: genderBreakdown,
-    };
-  });
+                    return {
+                      optionText: voteOption.text,
+                      count,
+                      percentage,
+                    };
+                  }).filter((a) => a.count > 0);
 
-  // 地域別の集計
-  const regionAnalytics = vote.options.map((option) => {
-    const optionRecords = vote.voteRecords?.filter(r => r.optionId === option.id) || [];
-    const regionBreakdown: Record<string, number> = {};
+                  return (
+                    <div key={option} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-white">{option}</span>
+                        <span className="text-sm text-gray-500">{total}人</span>
+                      </div>
+                      <div className="space-y-2">
+                        {analytics.map((a, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-sm text-gray-300">{a.optionText}</span>
+                                <span className="text-sm font-medium text-white">{a.percentage}%</span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div
+                                  className={`bg-gradient-to-r ${color} h-2 rounded-full transition-all`}
+                                  style={{ width: `${a.percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
-    REGIONS.forEach(region => {
-      regionBreakdown[region] = optionRecords.filter(r => r.region === region).length;
-    });
-
-    return {
-      optionText: option.text,
-      breakdown: regionBreakdown,
-    };
-  });
-
-  // 職業別の集計
-  const occupationAnalytics = vote.options.map((option) => {
-    const optionRecords = vote.voteRecords?.filter(r => r.optionId === option.id) || [];
-    const occupationBreakdown: Record<string, number> = {};
-
-    OCCUPATIONS.forEach(occupation => {
-      occupationBreakdown[occupation] = optionRecords.filter(r => r.occupation === occupation).length;
-    });
-
-    return {
-      optionText: option.text,
-      breakdown: occupationBreakdown,
-    };
-  });
-
+  // 従来の固定属性の分析（後方互換性のため）
   const getTotalForGroup = (group: string, type: 'age' | 'gender' | 'region' | 'occupation') => {
     const records = vote.voteRecords || [];
     if (type === 'age') {
@@ -98,6 +120,79 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
     }
   };
 
+  const renderAttributeSection = (
+    title: string,
+    attributes: string[],
+    type: 'age' | 'gender' | 'region' | 'occupation',
+    color: string
+  ) => {
+    const analytics = vote.options.map((option) => {
+      const optionRecords = vote.voteRecords?.filter(r => r.optionId === option.id) || [];
+      const breakdown: Record<string, number> = {};
+
+      attributes.forEach(attr => {
+        breakdown[attr] = optionRecords.filter(r => {
+          if (type === 'age') return r.age === attr;
+          if (type === 'gender') return r.gender === attr;
+          if (type === 'region') return r.region === attr;
+          if (type === 'occupation') return r.occupation === attr;
+          return false;
+        }).length;
+      });
+
+      return {
+        optionText: option.text,
+        breakdown,
+      };
+    });
+
+    return (
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
+        <div className="space-y-3">
+          {attributes.map((attr) => {
+            const total = getTotalForGroup(attr, type);
+            if (total === 0) return null;
+
+            return (
+              <div key={attr} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-white">{attr}</span>
+                  <span className="text-sm text-gray-500">{total}人</span>
+                </div>
+                <div className="space-y-2">
+                  {analytics.map((a, idx) => {
+                    const count = a.breakdown[attr];
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+
+                    if (count === 0) return null;
+
+                    return (
+                      <div key={idx} className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm text-gray-300">{a.optionText}</span>
+                            <span className="text-sm font-medium text-white">{percentage}%</span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div
+                              className={`bg-gradient-to-r ${color} h-2 rounded-full transition-all`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6 mt-4">
       <div className="flex items-center gap-2 mb-4">
@@ -105,185 +200,10 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
         <h2 className="text-xl font-bold text-white">属性別分析</h2>
       </div>
 
-      {/* 年代別分析 */}
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-3">年代別</h3>
-        <div className="space-y-3">
-          {AGE_GROUPS.map((age) => {
-            const total = getTotalForGroup(age, 'age');
-            if (total === 0) return null;
-
-            return (
-              <div key={age} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-white">{age}</span>
-                  <span className="text-sm text-gray-500">{total}人</span>
-                </div>
-                <div className="space-y-2">
-                  {ageAnalytics.map((analytics, idx) => {
-                    const count = analytics.breakdown[age];
-                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-
-                    if (count === 0) return null;
-
-                    return (
-                      <div key={idx} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-white">{percentage}%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
-                              style={{ width: percentage + '%' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 性別分析 */}
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-3">性別</h3>
-        <div className="space-y-3">
-          {GENDERS.map((gender) => {
-            const total = getTotalForGroup(gender, 'gender');
-            if (total === 0) return null;
-
-            return (
-              <div key={gender} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-white">{gender}</span>
-                  <span className="text-sm text-gray-500">{total}人</span>
-                </div>
-                <div className="space-y-2">
-                  {genderAnalytics.map((analytics, idx) => {
-                    const count = analytics.breakdown[gender];
-                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-
-                    if (count === 0) return null;
-
-                    return (
-                      <div key={idx} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-white">{percentage}%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
-                              style={{ width: percentage + '%' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 地域別分析 */}
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-3">地域</h3>
-        <div className="space-y-3">
-          {REGIONS.map((region) => {
-            const total = getTotalForGroup(region, 'region');
-            if (total === 0) return null;
-
-            return (
-              <div key={region} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-white">{region}</span>
-                  <span className="text-sm text-gray-500">{total}人</span>
-                </div>
-                <div className="space-y-2">
-                  {regionAnalytics.map((analytics, idx) => {
-                    const count = analytics.breakdown[region];
-                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-
-                    if (count === 0) return null;
-
-                    return (
-                      <div key={idx} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-white">{percentage}%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full transition-all"
-                              style={{ width: percentage + '%' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 職業別分析 */}
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-3">職業</h3>
-        <div className="space-y-3">
-          {OCCUPATIONS.map((occupation) => {
-            const total = getTotalForGroup(occupation, 'occupation');
-            if (total === 0) return null;
-
-            return (
-              <div key={occupation} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-white">{occupation}</span>
-                  <span className="text-sm text-gray-500">{total}人</span>
-                </div>
-                <div className="space-y-2">
-                  {occupationAnalytics.map((analytics, idx) => {
-                    const count = analytics.breakdown[occupation];
-                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-
-                    if (count === 0) return null;
-
-                    return (
-                      <div key={idx} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-300">{analytics.optionText}</span>
-                            <span className="text-sm font-medium text-white">{percentage}%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all"
-                              style={{ width: percentage + '%' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {renderAttributeSection('年代別', AGE_GROUPS, 'age', 'from-blue-500 to-purple-500')}
+      {renderAttributeSection('性別', GENDERS, 'gender', 'from-blue-500 to-purple-500')}
+      {renderAttributeSection('地域', REGIONS, 'region', 'from-green-500 to-teal-500')}
+      {renderAttributeSection('職業', OCCUPATIONS, 'occupation', 'from-orange-500 to-red-500')}
     </div>
   );
 }

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ThumbsUp, Check, BarChart3, Trash2, MessageCircle, Share2, Copy } from "lucide-react";
+import { ArrowLeft, ThumbsUp, Check, BarChart3, Trash2, MessageCircle, Share2, Copy, Lock } from "lucide-react";
 import { Vote } from "@/lib/types";
 import { getCurrentUser, hasUser } from "@/lib/user";
-import UserSetupModal from "@/components/UserSetupModal";
+import CustomQuestionModal from "@/components/CustomQuestionModal";
 import CommentSection from "@/components/CommentSection";
 import AnalyticsSection from "@/components/AnalyticsSection";
 import { getRelativeTime } from "@/lib/dateUtils";
@@ -20,20 +20,15 @@ export default function VoteDetailPage() {
   const [userVote, setUserVote] = useState<string | null>(null);
   const [showChangeWarning, setShowChangeWarning] = useState(false);
   const [pendingVote, setPendingVote] = useState<string | null>(null);
-  const [showUserSetup, setShowUserSetup] = useState(false);
-  const [userSetupComplete, setUserSetupComplete] = useState(false);
   const [voteChanged, setVoteChanged] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showCustomQuestions, setShowCustomQuestions] = useState(false);
+  const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVote();
-    if (!hasUser()) {
-      setShowUserSetup(true);
-    } else {
-      setUserSetupComplete(true);
-    }
     // localStorageから投票履歴を読み込む
     const savedVotes = localStorage.getItem('userVotes');
     if (savedVotes && params.id) {
@@ -67,11 +62,18 @@ export default function VoteDetailPage() {
       return;
     }
 
+    // カスタム質問がある場合はモーダルを表示
+    if (vote?.customQuestions && vote.customQuestions.length > 0) {
+      setPendingOptionId(optionId);
+      setShowCustomQuestions(true);
+      return;
+    }
+
     setSelectedOption(optionId);
     submitVote(optionId);
   };
 
-  const submitVote = async (optionId: string) => {
+  const submitVote = async (optionId: string, customAttributes?: Record<string, string>) => {
     if (voting) return;
 
     setVoting(true);
@@ -89,6 +91,7 @@ export default function VoteDetailPage() {
           gender: currentUser?.gender,
           region: currentUser?.region,
           occupation: currentUser?.occupation,
+          customAttributes,
         }),
       });
 
@@ -165,6 +168,15 @@ export default function VoteDetailPage() {
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + url)}`, '_blank');
   };
 
+  const handleCustomQuestionsComplete = (answers: Record<string, string>) => {
+    if (pendingOptionId) {
+      setShowCustomQuestions(false);
+      setSelectedOption(pendingOptionId);
+      submitVote(pendingOptionId, answers);
+      setPendingOptionId(null);
+    }
+  };
+
   const copyUrl = async () => {
     const url = `https://voteapp-4pn3.vercel.app/votes/${params.id}`;
     try {
@@ -233,9 +245,17 @@ export default function VoteDetailPage() {
         <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">
-                {vote.category || '一般'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">
+                  {vote.category || '一般'}
+                </span>
+                {vote.isPrivate && (
+                  <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30 flex items-center gap-1">
+                    <Lock size={12} />
+                    プライベート
+                  </span>
+                )}
+              </div>
               <span className="text-xs text-gray-500">
                 {getRelativeTime(vote.createdAt)}
               </span>
@@ -435,11 +455,13 @@ export default function VoteDetailPage() {
         </div>
       )}
 
-      {showUserSetup && (
-        <UserSetupModal
-          onComplete={() => {
-            setShowUserSetup(false);
-            setUserSetupComplete(true);
+      {showCustomQuestions && vote?.customQuestions && (
+        <CustomQuestionModal
+          questions={vote.customQuestions}
+          onComplete={handleCustomQuestionsComplete}
+          onCancel={() => {
+            setShowCustomQuestions(false);
+            setPendingOptionId(null);
           }}
         />
       )}
