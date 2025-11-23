@@ -39,7 +39,7 @@ export default function ProfilePage() {
     try {
       const [votesRes, commentsRes] = await Promise.all([
         fetch("/api/votes"),
-        fetch("/api/votes/1/comments").catch(() => ({ ok: false })),
+        fetch("/api/votes/1/comments").catch(() => null),
       ]);
 
       if (votesRes.ok) {
@@ -47,7 +47,7 @@ export default function ProfilePage() {
         setVotes(votesData);
       }
 
-      if (commentsRes.ok) {
+      if (commentsRes && commentsRes.ok) {
         const commentsData = await commentsRes.json();
         setComments(commentsData);
       }
