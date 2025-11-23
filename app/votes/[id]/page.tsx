@@ -152,12 +152,14 @@ export default function VoteDetailPage() {
   };
 
   const shareToTwitter = () => {
+    if (!vote) return;
     const url = `https://voteapp-4pn3.vercel.app/votes/${params.id}`;
     const text = `${vote.title}\n\n投票に参加しよう！`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
   };
 
   const shareToLine = () => {
+    if (!vote) return;
     const url = `https://voteapp-4pn3.vercel.app/votes/${params.id}`;
     const text = `${vote.title}\n\n投票に参加しよう！`;
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + url)}`, '_blank');
