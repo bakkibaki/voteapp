@@ -9,6 +9,39 @@ import { CustomQuestion } from "@/lib/types";
 
 const CATEGORIES = ['ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
 
+const QUESTION_TEMPLATES = [
+  {
+    id: 'age',
+    question: '年代を教えてください',
+    options: ['10代', '20代', '30代', '40代', '50代', '60代以上'],
+  },
+  {
+    id: 'gender',
+    question: '性別を教えてください',
+    options: ['男性', '女性', 'その他', '回答しない'],
+  },
+  {
+    id: 'region',
+    question: 'お住まいの地域を教えてください',
+    options: ['北海道', '東北', '関東', '中部', '近畿', '中国', '四国', '九州・沖縄', '海外'],
+  },
+  {
+    id: 'occupation',
+    question: '職業を教えてください',
+    options: ['会社員', '公務員', '自営業', '学生', '主婦/主夫', 'パート/アルバイト', '無職', 'その他'],
+  },
+  {
+    id: 'frequency',
+    question: '利用頻度を教えてください',
+    options: ['毎日', '週に数回', '月に数回', 'たまに', '初めて'],
+  },
+  {
+    id: 'experience',
+    question: '経験年数を教えてください',
+    options: ['1年未満', '1-3年', '3-5年', '5-10年', '10年以上'],
+  },
+];
+
 interface CustomQuestionBuilder extends CustomQuestion {
   options: string[];
 }
@@ -56,6 +89,20 @@ export default function CreateVotePage() {
         options: ["", ""],
       },
     ]);
+  };
+
+  const addCustomQuestionFromTemplate = (templateId: string) => {
+    const template = QUESTION_TEMPLATES.find(t => t.id === templateId);
+    if (template) {
+      setCustomQuestions([
+        ...customQuestions,
+        {
+          id: `q-${Date.now()}`,
+          question: template.question,
+          options: [...template.options],
+        },
+      ]);
+    }
   };
 
   const removeCustomQuestion = (index: number) => {
@@ -304,14 +351,28 @@ export default function CreateVotePage() {
 
             {/* カスタム質問セクション */}
             <div className="border-t border-gray-800 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-300">
-                    カスタム属性質問（オプション）
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    投票者に質問したい属性を自由に設定できます（例：年代、性別、地域など）
-                  </p>
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">
+                  カスタム属性質問（オプション）
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">
+                  投票者に質問したい属性を自由に設定できます。テンプレートから選ぶか、独自の質問を追加できます
+                </p>
+
+                <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-4">
+                  <p className="text-xs font-semibold text-gray-400 mb-3">📋 テンプレートから追加</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {QUESTION_TEMPLATES.map((template) => (
+                      <button
+                        key={template.id}
+                        type="button"
+                        onClick={() => addCustomQuestionFromTemplate(template.id)}
+                        className="text-xs px-3 py-2 bg-gray-900 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500 text-gray-300 hover:text-white rounded-lg transition-all text-left"
+                      >
+                        {template.question}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -383,7 +444,7 @@ export default function CreateVotePage() {
                 className="px-4 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-xl hover:bg-purple-500/20 transition flex items-center gap-2 font-medium"
               >
                 <Plus size={18} />
-                質問を追加
+                独自の質問を追加
               </button>
             </div>
 
