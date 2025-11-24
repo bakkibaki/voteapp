@@ -216,6 +216,7 @@ export default function Home() {
                 const showAd = (index + 1) % 3 === 0 && index !== filteredPolls.length - 1;
 
               return (
+                <>
                 <div key={poll.id} className="bg-gray-900 rounded-xl border border-gray-800 hover:border-cyan-500/50 transition-all overflow-hidden group">
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-3">
