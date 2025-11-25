@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Edit2, BarChart3, MessageCircle, Calendar, FileText } from "lucide-react";
+import { ArrowLeft, Edit2, BarChart3, MessageCircle, Calendar, FileText, ThumbsUp } from "lucide-react";
 import { getCurrentUser, hasUser, getAvatarOptions, updateUser } from "@/lib/user";
 import { Vote, Comment } from "@/lib/types";
 
@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(getCurrentUser());
   const [votes, setVotes] = useState<Vote[]>([]);
+  const [votedVotes, setVotedVotes] = useState<Vote[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +51,33 @@ export default function ProfilePage() {
       if (commentsRes && commentsRes.ok) {
         const commentsData = await commentsRes.json();
         setComments(commentsData);
+      }
+
+      // localStorageから投票履歴を取得
+      const savedVotes = localStorage.getItem('userVotes');
+      if (savedVotes) {
+        const votesMap = JSON.parse(savedVotes);
+        const voteIds = Object.keys(votesMap);
+
+        if (voteIds.length > 0) {
+          // 投票した投票の詳細を取得
+          const votedVotesData = await Promise.all(
+            voteIds.map(async (voteId) => {
+              try {
+                const res = await fetch(`/api/votes/${voteId}`);
+                if (res.ok) {
+                  const voteData = await res.json();
+                  return { ...voteData, userSelectedOptionId: votesMap[voteId] };
+                }
+                return null;
+              } catch {
+                return null;
+              }
+            })
+          );
+
+          setVotedVotes(votedVotesData.filter((v) => v !== null) as Vote[]);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -106,6 +134,7 @@ export default function ProfilePage() {
 
   const stats = {
     votesCreated: createdVotes.length,
+    votesParticipated: votedVotes.length,
     commentsPosted: userComments.length,
   };
 
@@ -310,23 +339,68 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-cyan-500/10 rounded-xl p-4 border border-cyan-500/30">
                 <div className="flex items-center gap-2 text-cyan-400 mb-1">
                   <FileText size={18} />
-                  <span className="text-sm font-semibold">作成した投票</span>
+                  <span className="text-xs font-semibold">作成した投票</span>
                 </div>
                 <p className="text-3xl font-bold text-white">{stats.votesCreated}</p>
+              </div>
+
+              <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
+                <div className="flex items-center gap-2 text-green-400 mb-1">
+                  <ThumbsUp size={18} />
+                  <span className="text-xs font-semibold">投票した数</span>
+                </div>
+                <p className="text-3xl font-bold text-white">{stats.votesParticipated}</p>
               </div>
 
               <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/30">
                 <div className="flex items-center gap-2 text-purple-400 mb-1">
                   <MessageCircle size={18} />
-                  <span className="text-sm font-semibold">コメント数</span>
+                  <span className="text-xs font-semibold">コメント数</span>
                 </div>
                 <p className="text-3xl font-bold text-white">{stats.commentsPosted}</p>
               </div>
             </div>
+
+            {votedVotes.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <ThumbsUp size={20} className="text-green-400" />
+                  投票した投票
+                </h3>
+                <div className="space-y-3">
+                  {votedVotes.map((vote: any) => {
+                    const totalVotes = vote.options.reduce((sum: number, opt: any) => sum + opt.votes, 0);
+                    const selectedOption = vote.options.find((opt: any) => opt.id === vote.userSelectedOptionId);
+                    return (
+                      <button
+                        key={vote.id}
+                        onClick={() => router.push(`/votes/${vote.id}`)}
+                        className="w-full text-left p-4 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 hover:border-green-500/50 transition"
+                      >
+                        <h4 className="font-semibold text-white mb-2">{vote.title}</h4>
+                        {selectedOption && (
+                          <div className="mb-2 text-sm">
+                            <span className="text-green-400 font-medium">あなたの投票: </span>
+                            <span className="text-gray-300">{selectedOption.text}</span>
+                          </div>
+                        )}
+                        <div className="flex gap-4 text-sm text-gray-400">
+                          <span>{vote.options.length}個の選択肢</span>
+                          <span>•</span>
+                          <span>{totalVotes}票</span>
+                          <span>•</span>
+                          <span>{new Date(vote.createdAt).toLocaleDateString("ja-JP")}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {createdVotes.length > 0 && (
               <div>

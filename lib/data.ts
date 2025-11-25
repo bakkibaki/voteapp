@@ -138,6 +138,34 @@ export async function updateVote(id: string, updatedVote: Vote): Promise<Vote | 
   };
 }
 
+export async function getVotesByIds(ids: string[]): Promise<Vote[]> {
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('votes')
+    .select('*')
+    .in('id', ids);
+
+  if (error) {
+    console.error('Error fetching votes by ids:', error);
+    return [];
+  }
+
+  return (data || []).map((vote) => ({
+    id: vote.id,
+    title: vote.title,
+    options: vote.options,
+    createdAt: vote.created_at,
+    category: vote.category,
+    authorId: vote.author_id,
+    authorName: vote.author_name,
+    voteRecords: vote.vote_records || [],
+    showAnalytics: vote.show_analytics,
+    isPrivate: vote.is_private,
+    customQuestions: vote.custom_questions,
+  }));
+}
+
 export async function deleteVote(id: string, userId: string): Promise<boolean> {
   // まず投票を取得して作成者か確認
   const { data: vote, error: fetchError } = await supabase
