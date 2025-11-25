@@ -261,9 +261,19 @@ export default function VoteDetailPage() {
               </span>
             </div>
 
-            <h1 className="text-2xl font-bold text-white mb-6">
+            <h1 className="text-2xl font-bold text-white mb-2">
               {vote.title}
             </h1>
+
+            {vote.authorName && vote.authorId && (
+              <button
+                onClick={() => router.push(`/profile/${vote.authorId}`)}
+                className="flex items-center gap-2 mb-6 text-sm text-gray-400 hover:text-cyan-400 transition"
+              >
+                <span>投稿者:</span>
+                <span className="font-medium">{vote.authorName}</span>
+              </button>
+            )}
 
             {!hasVoted ? (
               <div className="space-y-3 mb-6">

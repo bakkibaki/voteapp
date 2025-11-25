@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { MessageCircle, Heart, Reply, Send, X } from "lucide-react";
 import { Comment } from "@/lib/types";
 import { getCurrentUser } from "@/lib/user";
@@ -14,6 +15,7 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ voteId, userVotedOptionText, onCommentCountChange }: CommentSectionProps) {
+  const router = useRouter();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
@@ -117,7 +119,15 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
           <div className="flex-1">
             <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-semibold text-sm text-white">{comment.userName}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/profile/${comment.userId}`);
+                  }}
+                  className="font-semibold text-sm text-white hover:text-cyan-400 transition"
+                >
+                  {comment.userName}
+                </button>
                 {comment.votedOptionText && (
                   <span className="text-xs bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/30">
                     {comment.votedOptionText}派

@@ -289,6 +289,17 @@ export default function Home() {
                         <MessageCircle size={16} />
                         {poll.commentCount || 0}件のコメント
                       </button>
+                      {poll.authorName && poll.authorId && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/profile/${poll.authorId}`);
+                          }}
+                          className="ml-auto text-xs hover:text-cyan-400 transition"
+                        >
+                          by {poll.authorName}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
