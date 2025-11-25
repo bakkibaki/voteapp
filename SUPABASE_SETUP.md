@@ -50,7 +50,9 @@ CREATE TABLE IF NOT EXISTS votes (
   author_id TEXT,
   author_name TEXT,
   vote_records JSONB DEFAULT '[]'::jsonb,
-  show_analytics BOOLEAN DEFAULT true
+  show_analytics BOOLEAN DEFAULT true,
+  is_private BOOLEAN DEFAULT false,
+  custom_questions JSONB
 );
 
 -- commentsテーブル
@@ -84,6 +86,12 @@ ALTER TABLE comments ADD COLUMN IF NOT EXISTS voted_option_text TEXT;
 
 -- votesテーブルにshow_analyticsカラムを追加
 ALTER TABLE votes ADD COLUMN IF NOT EXISTS show_analytics BOOLEAN DEFAULT true;
+
+-- votesテーブルにis_privateカラムを追加
+ALTER TABLE votes ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
+
+-- votesテーブルにcustom_questionsカラムを追加（カスタム属性質問機能用）
+ALTER TABLE votes ADD COLUMN IF NOT EXISTS custom_questions JSONB;
 ```
 
 ## 5. 開発サーバーを再起動

@@ -30,6 +30,8 @@ export async function getAllVotes(): Promise<Vote[]> {
         authorName: vote.author_name,
         voteRecords: vote.vote_records || [],
         showAnalytics: vote.show_analytics,
+        isPrivate: vote.is_private,
+        customQuestions: vote.custom_questions,
         commentCount: count || 0,
       };
     })
@@ -60,6 +62,8 @@ export async function getVoteById(id: string): Promise<Vote | null> {
     authorName: data.author_name,
     voteRecords: data.vote_records || [],
     showAnalytics: data.show_analytics,
+    isPrivate: data.is_private,
+    customQuestions: data.custom_questions,
   };
 }
 
@@ -76,6 +80,8 @@ export async function createVote(vote: Vote): Promise<Vote> {
       author_name: vote.authorName,
       vote_records: vote.voteRecords || [],
       show_analytics: vote.showAnalytics !== undefined ? vote.showAnalytics : true,
+      is_private: vote.isPrivate || false,
+      custom_questions: vote.customQuestions,
     }])
     .select()
     .single();
@@ -95,6 +101,8 @@ export async function createVote(vote: Vote): Promise<Vote> {
     authorName: data.author_name,
     voteRecords: data.vote_records || [],
     showAnalytics: data.show_analytics,
+    isPrivate: data.is_private,
+    customQuestions: data.custom_questions,
   };
 }
 
