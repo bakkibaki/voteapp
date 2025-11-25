@@ -46,6 +46,8 @@ export default function VoteDetailPage() {
         throw new Error("投票の取得に失敗しました");
       }
       const data = await response.json();
+      console.log('Fetched vote data:', data);
+      console.log('Custom questions:', data.customQuestions);
       setVote(data);
     } catch (error) {
       alert("エラーが発生しました");
@@ -56,6 +58,10 @@ export default function VoteDetailPage() {
   };
 
   const handleVoteClick = (optionId: string) => {
+    console.log('handleVoteClick called');
+    console.log('vote?.customQuestions:', vote?.customQuestions);
+    console.log('customQuestions length:', vote?.customQuestions?.length);
+
     if (userVote && userVote !== optionId) {
       setPendingVote(optionId);
       setShowChangeWarning(true);
@@ -64,11 +70,13 @@ export default function VoteDetailPage() {
 
     // カスタム質問がある場合はモーダルを表示
     if (vote?.customQuestions && vote.customQuestions.length > 0) {
+      console.log('Showing custom questions modal');
       setPendingOptionId(optionId);
       setShowCustomQuestions(true);
       return;
     }
 
+    console.log('No custom questions, submitting vote directly');
     setSelectedOption(optionId);
     submitVote(optionId);
   };

@@ -175,21 +175,27 @@ export default function CreateVotePage() {
 
       const currentUser = getCurrentUser();
 
+      console.log('Creating vote with custom questions:', validCustomQuestions);
+
+      const requestBody = {
+        title,
+        options: validOptions,
+        category,
+        authorId: currentUser?.id,
+        authorName: currentUser?.name,
+        showAnalytics,
+        isPrivate,
+        customQuestions: validCustomQuestions.length > 0 ? validCustomQuestions : undefined,
+      };
+
+      console.log('Request body:', requestBody);
+
       const response = await fetch("/api/votes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title,
-          options: validOptions,
-          category,
-          authorId: currentUser?.id,
-          authorName: currentUser?.name,
-          showAnalytics,
-          isPrivate,
-          customQuestions: validCustomQuestions.length > 0 ? validCustomQuestions : undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

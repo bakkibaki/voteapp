@@ -19,6 +19,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { title, options, category, authorId, authorName, showAnalytics, isPrivate, customQuestions } = body;
 
+    console.log('POST /api/votes - received customQuestions:', customQuestions);
+
     if (!title || !options || !Array.isArray(options) || options.length < 2) {
       return NextResponse.json(
         { error: "タイトルと2つ以上の選択肢が必要です" },
@@ -43,7 +45,12 @@ export async function POST(request: NextRequest) {
       customQuestions: customQuestions || undefined,
     };
 
+    console.log('Creating vote with customQuestions:', vote.customQuestions);
+
     const createdVote = await createVote(vote);
+
+    console.log('Created vote:', createdVote);
+
     return NextResponse.json(createdVote, { status: 201 });
   } catch (error) {
     return NextResponse.json(

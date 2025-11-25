@@ -68,21 +68,27 @@ export async function getVoteById(id: string): Promise<Vote | null> {
 }
 
 export async function createVote(vote: Vote): Promise<Vote> {
+  console.log('createVote called with customQuestions:', vote.customQuestions);
+
+  const insertData = {
+    id: vote.id,
+    title: vote.title,
+    options: vote.options,
+    created_at: vote.createdAt,
+    category: vote.category,
+    author_id: vote.authorId,
+    author_name: vote.authorName,
+    vote_records: vote.voteRecords || [],
+    show_analytics: vote.showAnalytics !== undefined ? vote.showAnalytics : true,
+    is_private: vote.isPrivate || false,
+    custom_questions: vote.customQuestions,
+  };
+
+  console.log('Inserting data:', insertData);
+
   const { data, error } = await supabase
     .from('votes')
-    .insert([{
-      id: vote.id,
-      title: vote.title,
-      options: vote.options,
-      created_at: vote.createdAt,
-      category: vote.category,
-      author_id: vote.authorId,
-      author_name: vote.authorName,
-      vote_records: vote.voteRecords || [],
-      show_analytics: vote.showAnalytics !== undefined ? vote.showAnalytics : true,
-      is_private: vote.isPrivate || false,
-      custom_questions: vote.customQuestions,
-    }])
+    .insert([insertData])
     .select()
     .single();
 
@@ -90,6 +96,8 @@ export async function createVote(vote: Vote): Promise<Vote> {
     console.error('Error creating vote:', error);
     throw new Error('Failed to create vote');
   }
+
+  console.log('Supabase returned:', data);
 
   return {
     id: data.id,
