@@ -13,6 +13,14 @@ const REGIONS = ['北海道', '東北', '関東', '中部', '近畿', '中国', 
 const OCCUPATIONS = ['会社員', '公務員', '自営業', '学生', '主婦/主夫', 'パート/アルバイト', '無職', 'その他'];
 
 export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
+  // デバッグ情報
+  console.log('AnalyticsSection - vote data:', {
+    hasCustomQuestions: !!vote.customQuestions,
+    customQuestionsLength: vote.customQuestions?.length || 0,
+    voteRecordsLength: vote.voteRecords?.length || 0,
+    firstRecordCustomAttributes: vote.voteRecords?.[0]?.customAttributes,
+  });
+
   if (!vote.voteRecords || vote.voteRecords.length === 0) {
     return (
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mt-4">

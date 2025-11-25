@@ -76,23 +76,29 @@ export default function VoteDetailPage() {
   const submitVote = async (optionId: string, customAttributes?: Record<string, string>) => {
     if (voting) return;
 
+    console.log('submitVote called with:', { optionId, customAttributes });
+
     setVoting(true);
     try {
       const currentUser = getCurrentUser();
+      const requestBody = {
+        optionId,
+        userId: currentUser?.id,
+        age: currentUser?.age,
+        gender: currentUser?.gender,
+        region: currentUser?.region,
+        occupation: currentUser?.occupation,
+        customAttributes,
+      };
+
+      console.log('Sending vote request:', requestBody);
+
       const response = await fetch(`/api/votes/${params.id}/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          optionId,
-          userId: currentUser?.id,
-          age: currentUser?.age,
-          gender: currentUser?.gender,
-          region: currentUser?.region,
-          occupation: currentUser?.occupation,
-          customAttributes,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
