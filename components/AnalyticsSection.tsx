@@ -1,16 +1,11 @@
 "use client";
 
-import { Vote, VoteRecord, CustomQuestion } from "@/lib/types";
+import { Vote } from "@/lib/types";
 import { BarChart3 } from "lucide-react";
 
 interface AnalyticsSectionProps {
   vote: Vote;
 }
-
-const AGE_GROUPS = ['10代', '20代', '30代', '40代', '50代', '60代以上'];
-const GENDERS = ['男性', '女性', 'その他', '回答しない'];
-const REGIONS = ['北海道', '東北', '関東', '中部', '近畿', '中国', '四国', '九州・沖縄', '海外'];
-const OCCUPATIONS = ['会社員', '公務員', '自営業', '学生', '主婦/主夫', 'パート/アルバイト', '無職', 'その他'];
 
 export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
   // デバッグ情報
@@ -107,93 +102,6 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
             </div>
           );
         });
-  };
-
-  // 従来の固定属性の分析（後方互換性のため）
-  const getTotalForGroup = (group: string, type: 'age' | 'gender' | 'region' | 'occupation') => {
-    const records = vote.voteRecords || [];
-    if (type === 'age') {
-      return records.filter(r => r.age === group).length;
-    } else if (type === 'gender') {
-      return records.filter(r => r.gender === group).length;
-    } else if (type === 'region') {
-      return records.filter(r => r.region === group).length;
-    } else {
-      return records.filter(r => r.occupation === group).length;
-    }
-  };
-
-  const renderAttributeSection = (
-    title: string,
-    attributes: string[],
-    type: 'age' | 'gender' | 'region' | 'occupation',
-    color: string
-  ) => {
-    const analytics = vote.options.map((option) => {
-      const optionRecords = vote.voteRecords?.filter(r => r.optionId === option.id) || [];
-      const breakdown: Record<string, number> = {};
-
-      attributes.forEach(attr => {
-        breakdown[attr] = optionRecords.filter(r => {
-          if (type === 'age') return r.age === attr;
-          if (type === 'gender') return r.gender === attr;
-          if (type === 'region') return r.region === attr;
-          if (type === 'occupation') return r.occupation === attr;
-          return false;
-        }).length;
-      });
-
-      return {
-        optionText: option.text,
-        breakdown,
-      };
-    });
-
-    return (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
-        <div className="space-y-3">
-          {attributes.map((attr) => {
-            const total = getTotalForGroup(attr, type);
-            if (total === 0) return null;
-
-            return (
-              <div key={attr} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-white">{attr}</span>
-                  <span className="text-sm text-gray-500">{total}人</span>
-                </div>
-                <div className="space-y-2">
-                  {analytics.map((a, idx) => {
-                    const count = a.breakdown[attr];
-                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-
-                    if (count === 0) return null;
-
-                    return (
-                      <div key={idx} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-300">{a.optionText}</span>
-                            <span className="text-sm font-medium text-white">{percentage}%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div
-                              className={`bg-gradient-to-r ${color} h-2 rounded-full transition-all`}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
   };
 
   return (
