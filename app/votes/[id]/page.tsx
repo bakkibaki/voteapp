@@ -399,6 +399,10 @@ export default function VoteDetailPage() {
           </div>
         )}
 
+        {hasVoted && vote.showAnalytics !== false && (
+          <AnalyticsSection vote={vote} />
+        )}
+
         {hasVoted && (
           <CommentSection
             voteId={vote.id}
@@ -413,10 +417,6 @@ export default function VoteDetailPage() {
               💬 投票するとコメントが見れます
             </p>
           </div>
-        )}
-
-        {hasVoted && vote.showAnalytics !== false && (
-          <AnalyticsSection vote={vote} />
         )}
       </div>
 
