@@ -9,7 +9,29 @@ import AdBanner from '@/components/AdBanner';
 import { getRelativeTime } from '@/lib/dateUtils';
 import CustomQuestionModal from '@/components/CustomQuestionModal';
 
-const CATEGORIES = ['すべて', 'ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
+const CATEGORIES = [
+  'すべて',
+  '就活・転職',
+  '恋愛・結婚',
+  '学校・教育',
+  'ビジネス',
+  'ライフスタイル',
+  'テクノロジー',
+  'エンターテイメント',
+  'スポーツ',
+  '政治',
+  '健康・美容',
+  'グルメ',
+  '旅行',
+  'ファッション',
+  '音楽',
+  '映画・ドラマ',
+  'アニメ・マンガ',
+  'ゲーム',
+  'お金・投資',
+  '住まい',
+  'その他',
+];
 
 export default function Home() {
   const router = useRouter();
