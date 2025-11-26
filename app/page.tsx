@@ -7,6 +7,7 @@ import { Vote } from '@/lib/types';
 import { hasUser, getCurrentUser } from '@/lib/user';
 import AdBanner from '@/components/AdBanner';
 import { getRelativeTime } from '@/lib/dateUtils';
+import CustomQuestionModal from '@/components/CustomQuestionModal';
 
 const CATEGORIES = ['すべて', 'ライフスタイル', 'テクノロジー', 'エンターテイメント', 'スポーツ', '政治', 'その他'];
 
@@ -19,6 +20,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('すべて');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCustomQuestions, setShowCustomQuestions] = useState(false);
+  const [pendingVoteInfo, setPendingVoteInfo] = useState<{ pollId: string; optionId: string; poll: Vote } | null>(null);
 
   useEffect(() => {
     fetchPolls();
@@ -55,15 +58,16 @@ export default function Home() {
       return;
     }
 
-    // カスタム質問がある場合は詳細ページにリダイレクト
+    // カスタム質問がある場合はモーダルを表示
     const poll = polls.find(p => p.id === pollId);
     console.log('Home page - poll found:', poll);
     console.log('Home page - customQuestions:', poll?.customQuestions);
     console.log('Home page - customQuestions length:', poll?.customQuestions?.length);
 
     if (poll?.customQuestions && poll.customQuestions.length > 0) {
-      console.log('Home page - Redirecting to detail page for custom questions');
-      router.push(`/votes/${pollId}`);
+      console.log('Home page - Showing custom questions modal');
+      setPendingVoteInfo({ pollId, optionId, poll });
+      setShowCustomQuestions(true);
       return;
     }
 
@@ -71,7 +75,7 @@ export default function Home() {
     await submitVote(pollId, optionId);
   };
 
-  const submitVote = async (pollId: string, optionId: string) => {
+  const submitVote = async (pollId: string, optionId: string, customAttributes?: Record<string, string>) => {
     try {
       const currentUser = getCurrentUser();
       const response = await fetch(`/api/votes/${pollId}/vote`, {
@@ -86,6 +90,7 @@ export default function Home() {
           gender: currentUser?.gender,
           region: currentUser?.region,
           occupation: currentUser?.occupation,
+          customAttributes,
         }),
       });
 
@@ -98,6 +103,14 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Failed to vote:', error);
+    }
+  };
+
+  const handleCustomQuestionsComplete = async (answers: Record<string, string>) => {
+    if (pendingVoteInfo) {
+      await submitVote(pendingVoteInfo.pollId, pendingVoteInfo.optionId, answers);
+      setShowCustomQuestions(false);
+      setPendingVoteInfo(null);
     }
   };
 
@@ -377,6 +390,17 @@ export default function Home() {
             </div>
           </div>
         </div>
+      )}
+
+      {showCustomQuestions && pendingVoteInfo && (
+        <CustomQuestionModal
+          questions={pendingVoteInfo.poll.customQuestions || []}
+          onComplete={handleCustomQuestionsComplete}
+          onCancel={() => {
+            setShowCustomQuestions(false);
+            setPendingVoteInfo(null);
+          }}
+        />
       )}
 
     </div>
