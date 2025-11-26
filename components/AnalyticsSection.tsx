@@ -33,16 +33,13 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
     );
   }
 
-  // カスタム質問がある場合
-  if (vote.customQuestions && vote.customQuestions.length > 0) {
-    return (
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6 mt-4">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="text-cyan-400" size={24} />
-          <h2 className="text-xl font-bold text-white">属性別分析</h2>
-        </div>
+  // カスタム質問の分析を生成
+  const renderCustomQuestions = () => {
+    if (!vote.customQuestions || vote.customQuestions.length === 0) {
+      return null;
+    }
 
-        {vote.customQuestions.map((question, qIdx) => {
+    return vote.customQuestions.map((question, qIdx) => {
           const colors = [
             'from-blue-500 to-purple-500',
             'from-pink-500 to-rose-500',
@@ -109,10 +106,8 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
               </div>
             </div>
           );
-        })}
-      </div>
-    );
-  }
+        });
+  };
 
   // 従来の固定属性の分析（後方互換性のため）
   const getTotalForGroup = (group: string, type: 'age' | 'gender' | 'region' | 'occupation') => {
@@ -208,8 +203,12 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
         <h2 className="text-xl font-bold text-white">属性別分析</h2>
       </div>
 
+      {/* カスタム質問の分析 */}
+      {renderCustomQuestions()}
+
+      {/* 固定属性の分析 */}
       {renderAttributeSection('年代別', AGE_GROUPS, 'age', 'from-blue-500 to-purple-500')}
-      {renderAttributeSection('性別', GENDERS, 'gender', 'from-blue-500 to-purple-500')}
+      {renderAttributeSection('性別', GENDERS, 'gender', 'from-pink-500 to-rose-500')}
       {renderAttributeSection('地域', REGIONS, 'region', 'from-green-500 to-teal-500')}
       {renderAttributeSection('職業', OCCUPATIONS, 'occupation', 'from-orange-500 to-red-500')}
     </div>
