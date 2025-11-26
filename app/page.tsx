@@ -44,6 +44,8 @@ export default function Home() {
   };
 
   const handleVote = async (pollId: string, optionId: string) => {
+    console.log('Home page - handleVote called:', { pollId, optionId });
+
     const hadVoted = userVotes[pollId] !== undefined;
     const changedVote = hadVoted && userVotes[pollId] !== optionId;
 
@@ -55,11 +57,17 @@ export default function Home() {
 
     // カスタム質問がある場合は詳細ページにリダイレクト
     const poll = polls.find(p => p.id === pollId);
+    console.log('Home page - poll found:', poll);
+    console.log('Home page - customQuestions:', poll?.customQuestions);
+    console.log('Home page - customQuestions length:', poll?.customQuestions?.length);
+
     if (poll?.customQuestions && poll.customQuestions.length > 0) {
+      console.log('Home page - Redirecting to detail page for custom questions');
       router.push(`/votes/${pollId}`);
       return;
     }
 
+    console.log('Home page - No custom questions, submitting directly');
     await submitVote(pollId, optionId);
   };
 
