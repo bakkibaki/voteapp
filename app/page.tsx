@@ -53,6 +53,13 @@ export default function Home() {
       return;
     }
 
+    // カスタム質問がある場合は詳細ページにリダイレクト
+    const poll = polls.find(p => p.id === pollId);
+    if (poll?.customQuestions && poll.customQuestions.length > 0) {
+      router.push(`/votes/${pollId}`);
+      return;
+    }
+
     await submitVote(pollId, optionId);
   };
 
