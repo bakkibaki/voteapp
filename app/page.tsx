@@ -8,30 +8,7 @@ import { hasUser, getCurrentUser } from '@/lib/user';
 import AdBanner from '@/components/AdBanner';
 import { getRelativeTime } from '@/lib/dateUtils';
 import CustomQuestionModal from '@/components/CustomQuestionModal';
-
-const CATEGORIES = [
-  'すべて',
-  '就活・転職',
-  '恋愛・結婚',
-  '学校・教育',
-  'ビジネス',
-  'ライフスタイル',
-  'テクノロジー',
-  'エンターテイメント',
-  'スポーツ',
-  '政治',
-  '健康・美容',
-  'グルメ',
-  '旅行',
-  'ファッション',
-  '音楽',
-  '映画・ドラマ',
-  'アニメ・マンガ',
-  'ゲーム',
-  'お金・投資',
-  '住まい',
-  'その他',
-];
+import { getTrendingCategories } from '@/lib/categoryUtils';
 
 export default function Home() {
   const router = useRouter();
@@ -44,6 +21,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomQuestions, setShowCustomQuestions] = useState(false);
   const [pendingVoteInfo, setPendingVoteInfo] = useState<{ pollId: string; optionId: string; poll: Vote } | null>(null);
+  const [categories, setCategories] = useState<string[]>(['すべて']);
 
   useEffect(() => {
     fetchPolls();
@@ -60,6 +38,10 @@ export default function Home() {
       if (response.ok) {
         const data = await response.json();
         setPolls(data);
+
+        // トレンドカテゴリーを取得して設定
+        const trendingCategories = getTrendingCategories(data);
+        setCategories(['すべて', ...trendingCategories]);
       }
     } catch (error) {
       console.error('Failed to fetch polls:', error);
@@ -219,8 +201,11 @@ export default function Home() {
         </div>
 
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs text-gray-400">🔥 トレンド順に表示中</span>
+          </div>
           <div className="flex gap-2 overflow-x-auto">
-            {CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
