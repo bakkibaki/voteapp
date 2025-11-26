@@ -205,12 +205,6 @@ export default function AnalyticsSection({ vote }: AnalyticsSectionProps) {
 
       {/* カスタム質問の分析 */}
       {renderCustomQuestions()}
-
-      {/* 固定属性の分析 */}
-      {renderAttributeSection('年代別', AGE_GROUPS, 'age', 'from-blue-500 to-purple-500')}
-      {renderAttributeSection('性別', GENDERS, 'gender', 'from-pink-500 to-rose-500')}
-      {renderAttributeSection('地域', REGIONS, 'region', 'from-green-500 to-teal-500')}
-      {renderAttributeSection('職業', OCCUPATIONS, 'occupation', 'from-orange-500 to-red-500')}
     </div>
   );
 }
