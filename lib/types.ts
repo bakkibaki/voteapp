@@ -67,6 +67,7 @@ export interface Comment {
   createdAt: string;
   voteChanged?: boolean;
   votedOptionText?: string;
+  needsReply?: boolean;
 }
 
 export interface CommentsData {

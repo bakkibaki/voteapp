@@ -110,9 +110,36 @@ export default function Home() {
     }
   };
 
-  const handleCustomQuestionsComplete = async (answers: Record<string, string>) => {
+  const handleCustomQuestionsComplete = async (answers: Record<string, string>, comment?: string, needsReply?: boolean) => {
     if (pendingVoteInfo) {
       await submitVote(pendingVoteInfo.pollId, pendingVoteInfo.optionId, answers);
+
+      // コメントがある場合は投稿
+      if (comment) {
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          try {
+            const votedOption = pendingVoteInfo.poll.options.find(opt => opt.id === pendingVoteInfo.optionId);
+            await fetch(`/api/votes/${pendingVoteInfo.pollId}/comments`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userId: currentUser.id,
+                userName: currentUser.name,
+                userAvatar: currentUser.avatar,
+                content: comment,
+                votedOptionText: votedOption?.text,
+                needsReply: needsReply,
+              }),
+            });
+          } catch (error) {
+            console.error("Failed to post comment:", error);
+          }
+        }
+      }
+
       setShowCustomQuestions(false);
       setPendingVoteInfo(null);
     }

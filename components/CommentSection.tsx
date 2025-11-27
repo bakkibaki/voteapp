@@ -138,6 +138,11 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                     投票変更
                   </span>
                 )}
+                {comment.needsReply && !comment.parentId && (
+                  <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30">
+                    💬 返信希望
+                  </span>
+                )}
                 <span className="text-xs text-gray-500">
                   {getRelativeTime(comment.createdAt)}
                 </span>

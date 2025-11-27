@@ -182,12 +182,38 @@ export default function VoteDetailPage() {
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + url)}`, '_blank');
   };
 
-  const handleCustomQuestionsComplete = (answers: Record<string, string>) => {
+  const handleCustomQuestionsComplete = async (answers: Record<string, string>, comment?: string, needsReply?: boolean) => {
     if (pendingOptionId) {
       setShowCustomQuestions(false);
       setSelectedOption(pendingOptionId);
-      submitVote(pendingOptionId, answers);
+      await submitVote(pendingOptionId, answers);
       setPendingOptionId(null);
+
+      // コメントがある場合は投稿
+      if (comment && vote) {
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          try {
+            const votedOption = vote.options.find(opt => opt.id === pendingOptionId);
+            await fetch(`/api/votes/${params.id}/comments`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userId: currentUser.id,
+                userName: currentUser.name,
+                userAvatar: currentUser.avatar,
+                content: comment,
+                votedOptionText: votedOption?.text,
+                needsReply: needsReply,
+              }),
+            });
+          } catch (error) {
+            console.error("Failed to post comment:", error);
+          }
+        }
+      }
     }
   };
 

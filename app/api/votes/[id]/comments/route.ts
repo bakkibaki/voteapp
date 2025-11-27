@@ -25,7 +25,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, userName, userAvatar, content, parentId, voteChanged, votedOptionText } = body;
+    const { userId, userName, userAvatar, content, parentId, voteChanged, votedOptionText, needsReply } = body;
 
     if (!userId || !userName || !content) {
       return NextResponse.json(
@@ -46,6 +46,7 @@ export async function POST(
       createdAt: new Date().toISOString(),
       voteChanged,
       votedOptionText,
+      needsReply,
     };
 
     const createdComment = await createComment(comment);

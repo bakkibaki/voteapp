@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { CustomQuestion } from "@/lib/types";
-import { Check } from "lucide-react";
+import { Check, MessageCircle } from "lucide-react";
 
 interface CustomQuestionModalProps {
   questions: CustomQuestion[];
-  onComplete: (answers: Record<string, string>) => void;
+  onComplete: (answers: Record<string, string>, comment?: string, needsReply?: boolean) => void;
   onCancel: () => void;
 }
 
@@ -16,6 +16,8 @@ export default function CustomQuestionModal({
   onCancel,
 }: CustomQuestionModalProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [comment, setComment] = useState("");
+  const [needsReply, setNeedsReply] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ export default function CustomQuestionModal({
       return;
     }
 
-    onComplete(answers);
+    onComplete(answers, comment.trim() || undefined, needsReply);
   };
 
   const selectAnswer = (questionId: string, answer: string) => {
@@ -73,6 +75,38 @@ export default function CustomQuestionModal({
               </div>
             </div>
           ))}
+
+          {/* コメント入力欄 */}
+          <div className="pt-4 border-t border-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <MessageCircle size={16} className="text-cyan-400" />
+              <label className="text-sm font-semibold text-gray-300">
+                コメント（任意）
+              </label>
+            </div>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="投票と一緒にコメントを残せます..."
+              className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500 resize-none"
+              rows={3}
+            />
+
+            {comment.trim() && (
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="needsReply"
+                  checked={needsReply}
+                  onChange={(e) => setNeedsReply(e.target.checked)}
+                  className="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-cyan-500"
+                />
+                <label htmlFor="needsReply" className="text-sm text-gray-300 cursor-pointer">
+                  💬 返信を希望する
+                </label>
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-3 pt-4">
             <button
