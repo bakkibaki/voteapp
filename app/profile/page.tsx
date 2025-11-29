@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const [editRegion, setEditRegion] = useState("");
   const [editOccupation, setEditOccupation] = useState("");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const AGE_OPTIONS = ['25卒', '26卒', '27卒', '28卒', '29卒以降', '既卒'];
   const GENDER_OPTIONS = ['男性', '女性', 'その他', '回答しない'];
@@ -115,6 +116,13 @@ export default function ProfilePage() {
       setUser(updatedUser);
       setIsEditing(false);
     }
+  };
+
+  const handleResetAccount = () => {
+    // localStorageをすべてクリア
+    localStorage.clear();
+    // ホームページにリダイレクト
+    router.push('/');
   };
 
   if (!user) {
@@ -365,6 +373,20 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* アカウントリセットセクション */}
+            <div className="mb-6 p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+              <h3 className="text-sm font-bold text-red-400 mb-2">⚠️ アカウントのリセット</h3>
+              <p className="text-xs text-gray-400 mb-3">
+                アカウント情報と投票履歴をすべて削除します。この操作は元に戻せません。
+              </p>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition text-sm font-medium"
+              >
+                アカウントをリセット
+              </button>
+            </div>
+
             {votedVotes.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -434,6 +456,40 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* リセット確認ダイアログ */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-red-500/30 rounded-xl p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-bold mb-2 text-red-400">⚠️ アカウントをリセットしますか？</h3>
+            <p className="text-gray-300 mb-4 text-sm">
+              以下のデータがすべて削除されます：
+            </p>
+            <ul className="text-sm text-gray-400 mb-4 space-y-1">
+              <li>• アカウント情報（名前、プロフィール）</li>
+              <li>• 投票履歴</li>
+              <li>• その他すべてのローカルデータ</li>
+            </ul>
+            <p className="text-red-400 text-xs mb-4 font-semibold">
+              ※ この操作は元に戻せません
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 text-gray-300 transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleResetAccount}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
+              >
+                リセットする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
