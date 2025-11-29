@@ -102,7 +102,7 @@ export default function CustomQuestionModal({
                   className="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-cyan-500"
                 />
                 <label htmlFor="needsReply" className="text-sm text-gray-300 cursor-pointer">
-                  💬 返信を希望する
+                  💬 返信を希望する（異論を歓迎）
                 </label>
               </div>
             )}

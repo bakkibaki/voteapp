@@ -23,6 +23,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const [submitting, setSubmitting] = useState(false);
   const [showNameSetup, setShowNameSetup] = useState(false);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [needsReply, setNeedsReply] = useState(false);
 
   useEffect(() => {
     fetchComments();
@@ -69,12 +70,14 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
           content: newComment,
           parentId: replyTo?.id,
           votedOptionText: userVotedOptionText,
+          needsReply: replyTo ? undefined : needsReply, // 返信の場合はneedsReplyを設定しない
         }),
       });
 
       if (response.ok) {
         setNewComment("");
         setReplyTo(null);
+        setNeedsReply(false);
         await fetchComments();
       }
     } catch (error) {
@@ -164,7 +167,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                 )}
               </button>
 
-              {!isReply && (
+              {!isReply && comment.needsReply && (
                 <button
                   onClick={() => setReplyTo(comment)}
                   disabled={!currentUser}
@@ -228,21 +231,39 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
 
           <div className="flex gap-3">
             <div className="text-2xl flex-shrink-0">{currentUser?.avatar || "😊"}</div>
-            <div className="flex-1 flex gap-2">
-              <input
-                type="text"
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder={currentUser ? "コメントを追加..." : "コメントするには名前を設定してください"}
-                className="flex-1 px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500"
-              />
-              <button
-                type="submit"
-                disabled={!newComment.trim() || submitting}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <Send size={16} />
-              </button>
+            <div className="flex-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder={currentUser ? "コメントを追加..." : "コメントするには名前を設定してください"}
+                  className="flex-1 px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500"
+                />
+                <button
+                  type="submit"
+                  disabled={!newComment.trim() || submitting}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+
+              {/* 返信を受け付けるかのチェックボックス（返信時は非表示） */}
+              {!replyTo && newComment.trim() && currentUser && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="needsReply"
+                    checked={needsReply}
+                    onChange={(e) => setNeedsReply(e.target.checked)}
+                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-cyan-500"
+                  />
+                  <label htmlFor="needsReply" className="text-sm text-gray-300 cursor-pointer">
+                    💬 返信を希望する（異論を歓迎）
+                  </label>
+                </div>
+              )}
             </div>
           </div>
         </form>

@@ -23,10 +23,10 @@ export default function ProfilePage() {
   const [editOccupation, setEditOccupation] = useState("");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
-  const AGE_OPTIONS = ['10代', '20代', '30代', '40代', '50代', '60代以上'];
+  const AGE_OPTIONS = ['25卒', '26卒', '27卒', '28卒', '29卒以降', '既卒'];
   const GENDER_OPTIONS = ['男性', '女性', 'その他', '回答しない'];
   const REGION_OPTIONS = ['北海道', '東北', '関東', '中部', '近畿', '中国', '四国', '九州・沖縄', '海外'];
-  const OCCUPATION_OPTIONS = ['会社員', '公務員', '自営業', '学生', '主婦/主夫', 'パート/アルバイト', '無職', 'その他'];
+  const OCCUPATION_OPTIONS = ['就活中', '内定者', '社会人1-3年目', '社会人4年目以上', '大学院生', 'その他'];
 
   useEffect(() => {
     if (!hasUser()) {
@@ -191,7 +191,7 @@ export default function ProfilePage() {
                       rows={3}
                     />
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">年代</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">卒業年度</label>
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         {AGE_OPTIONS.map((ageOption) => (
                           <button
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">職業</label>
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">状況</label>
                       <div className="grid grid-cols-2 gap-2 mb-3">
                         {OCCUPATION_OPTIONS.map((occupationOption) => (
                           <button
