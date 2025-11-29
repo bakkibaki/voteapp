@@ -149,7 +149,7 @@ export default function UserProfilePage() {
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-            vote
+            vote就活
           </h1>
           <div className="flex items-center gap-3">
             {currentUser && (

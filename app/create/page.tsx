@@ -8,25 +8,18 @@ import { suggestCategory } from "@/lib/categoryUtils";
 import { CustomQuestion } from "@/lib/types";
 
 const CATEGORIES = [
-  '就活・転職',
-  '恋愛・結婚',
-  '学校・教育',
-  'ビジネス',
-  'ライフスタイル',
-  'テクノロジー',
-  'エンターテイメント',
-  'スポーツ',
-  '政治',
-  '健康・美容',
-  'グルメ',
-  '旅行',
-  'ファッション',
-  '音楽',
-  '映画・ドラマ',
-  'アニメ・マンガ',
-  'ゲーム',
-  'お金・投資',
-  '住まい',
+  '商社',
+  '金融',
+  'IT・通信',
+  'コンサル',
+  'メーカー',
+  '広告・マスコミ',
+  'デベロッパー・不動産',
+  'サービス',
+  '公務員・団体',
+  'インターン',
+  'ES・面接',
+  '業界研究',
   'その他',
 ];
 
@@ -236,7 +229,7 @@ export default function CreateVotePage() {
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-            vote
+            vote就活
           </h1>
           <div className="flex items-center gap-3">
             {getCurrentUser() && (
@@ -280,7 +273,7 @@ export default function CreateVotePage() {
                 onChange={(e) => setTitle(e.target.value)}
                 required
                 className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition text-white placeholder-gray-500"
-                placeholder="例: 朝食は和食派？洋食派？"
+                placeholder="例: 第一志望は大手企業？ベンチャー企業？"
               />
             </div>
 
