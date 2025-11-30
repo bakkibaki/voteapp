@@ -23,11 +23,24 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const [submitting, setSubmitting] = useState(false);
   const [showNameSetup, setShowNameSetup] = useState(false);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
-  const [needsReply, setNeedsReply] = useState(false);
+  const [needsReply, setNeedsReply] = useState(true); // デフォルトで異論を歓迎
 
   useEffect(() => {
     fetchComments();
   }, [voteId]);
+
+  useEffect(() => {
+    // ページ表示時とlocalStorageの変更時にユーザー情報を更新
+    const updateCurrentUser = () => {
+      setCurrentUser(getCurrentUser());
+    };
+
+    updateCurrentUser();
+
+    // localStorageの変更を監視
+    window.addEventListener('storage', updateCurrentUser);
+    return () => window.removeEventListener('storage', updateCurrentUser);
+  }, []);
 
   const fetchComments = async () => {
     try {
@@ -48,40 +61,58 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || submitting) return;
+    console.log('handleSubmit called', { newComment, submitting, currentUser });
+
+    if (!newComment.trim() || submitting) {
+      console.log('Early return: empty comment or submitting', { newComment: newComment.trim(), submitting });
+      return;
+    }
 
     // ユーザーが未設定の場合はモーダルを表示
     if (!currentUser) {
+      console.log('No current user, showing name setup modal');
       setShowNameSetup(true);
       return;
     }
 
+    console.log('Submitting comment...');
     setSubmitting(true);
     try {
+      const requestBody = {
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userAvatar: currentUser.avatar,
+        content: newComment,
+        parentId: replyTo?.id,
+        votedOptionText: userVotedOptionText,
+        needsReply: replyTo ? undefined : needsReply, // 返信の場合はneedsReplyを設定しない
+      };
+      console.log('Request body:', requestBody);
+
       const response = await fetch(`/api/votes/${voteId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userAvatar: currentUser.avatar,
-          content: newComment,
-          parentId: replyTo?.id,
-          votedOptionText: userVotedOptionText,
-          needsReply: replyTo ? undefined : needsReply, // 返信の場合はneedsReplyを設定しない
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+
       if (response.ok) {
+        console.log('Comment posted successfully');
         setNewComment("");
         setReplyTo(null);
-        setNeedsReply(false);
+        setNeedsReply(true); // デフォルトに戻す（異論を歓迎）
         await fetchComments();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to post comment:', errorData);
+        alert("コメントの投稿に失敗しました: " + (errorData.error || "不明なエラー"));
       }
     } catch (error) {
       console.error("Failed to post comment:", error);
+      alert("コメントの投稿中にエラーが発生しました");
     } finally {
       setSubmitting(false);
     }
@@ -107,6 +138,33 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
     }
   };
 
+  const handleToggleNeedsReply = async (commentId: string, currentNeedsReply: boolean) => {
+    if (!currentUser) return;
+
+    try {
+      const response = await fetch(`/api/comments/${commentId}/needs-reply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ needsReply: !currentNeedsReply }),
+      });
+
+      if (response.ok) {
+        // ローカルで状態を更新（即座にUIを更新）
+        setComments(prevComments =>
+          prevComments.map(comment =>
+            comment.id === commentId
+              ? { ...comment, needsReply: !currentNeedsReply }
+              : comment
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to toggle needs reply:", error);
+    }
+  };
+
   const topLevelComments = comments.filter((c) => !c.parentId);
   const getReplies = (commentId: string) =>
     comments.filter((c) => c.parentId === commentId);
@@ -114,6 +172,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => {
     const replies = getReplies(comment.id);
     const isLiked = currentUser ? comment.likes.includes(currentUser.id) : false;
+    const isOwnComment = currentUser && comment.userId === currentUser.id;
 
     return (
       <div className={`${isReply ? "ml-12 mt-3" : ""}`}>
@@ -141,10 +200,23 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                     投票変更
                   </span>
                 )}
-                {comment.needsReply && !comment.parentId && (
-                  <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30">
-                    💬 返信希望
-                  </span>
+                {!comment.parentId && (
+                  <button
+                    onClick={() => {
+                      if (isOwnComment) {
+                        handleToggleNeedsReply(comment.id, comment.needsReply || false);
+                      }
+                    }}
+                    disabled={!isOwnComment}
+                    className={`text-xs px-2 py-0.5 rounded-full border ${
+                      comment.needsReply
+                        ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                        : 'bg-gray-700/10 text-gray-500 border-gray-600/30'
+                    } ${isOwnComment ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'} transition`}
+                    title={isOwnComment ? 'クリックで切り替え' : ''}
+                  >
+                    💬 {comment.needsReply ? '返信希望' : '返信不要'}
+                  </button>
                 )}
                 <span className="text-xs text-gray-500">
                   {getRelativeTime(comment.createdAt)}
@@ -257,10 +329,11 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                     id="needsReply"
                     checked={needsReply}
                     onChange={(e) => setNeedsReply(e.target.checked)}
-                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-cyan-500"
+                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded focus:ring-2 focus:ring-cyan-500 cursor-pointer"
                   />
-                  <label htmlFor="needsReply" className="text-sm text-gray-300 cursor-pointer">
+                  <label htmlFor="needsReply" className="text-sm text-gray-300 cursor-pointer select-none">
                     💬 返信を希望する（異論を歓迎）
+                    <span className="text-xs text-gray-500 ml-1">※投稿後も変更可能</span>
                   </label>
                 </div>
               )}
@@ -283,12 +356,44 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
 
       {showNameSetup && (
         <QuickNameSetupModal
-          onComplete={() => {
+          onComplete={async () => {
             setShowNameSetup(false);
-            setCurrentUser(getCurrentUser());
+            const updatedUser = getCurrentUser();
+            setCurrentUser(updatedUser);
             // 設定完了後、自動的にコメントを送信
-            if (newComment.trim()) {
-              handleSubmit(new Event('submit') as any);
+            if (newComment.trim() && updatedUser) {
+              setSubmitting(true);
+              try {
+                const response = await fetch(`/api/votes/${voteId}/comments`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    userId: updatedUser.id,
+                    userName: updatedUser.name,
+                    userAvatar: updatedUser.avatar,
+                    content: newComment,
+                    parentId: replyTo?.id,
+                    votedOptionText: userVotedOptionText,
+                    needsReply: replyTo ? undefined : needsReply,
+                  }),
+                });
+
+                if (response.ok) {
+                  setNewComment("");
+                  setReplyTo(null);
+                  setNeedsReply(true); // デフォルトに戻す（異論を歓迎）
+                  await fetchComments();
+                } else {
+                  alert("コメントの投稿に失敗しました");
+                }
+              } catch (error) {
+                console.error("Failed to post comment:", error);
+                alert("コメントの投稿中にエラーが発生しました");
+              } finally {
+                setSubmitting(false);
+              }
             }
           }}
         />
