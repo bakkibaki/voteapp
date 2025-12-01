@@ -47,6 +47,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
       const response = await fetch(`/api/votes/${voteId}/comments`);
       if (response.ok) {
         const data = await response.json();
+        console.log('CommentSection - fetched comments:', data.map((c: any) => ({ id: c.id, needsReply: c.needsReply })));
         setComments(data);
         if (onCommentCountChange) {
           onCommentCountChange(data.length);
@@ -203,6 +204,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                 {!comment.parentId && (
                   <button
                     onClick={() => {
+                      console.log('Badge clicked:', { commentId: comment.id, currentNeedsReply: comment.needsReply, isOwnComment });
                       if (isOwnComment) {
                         handleToggleNeedsReply(comment.id, comment.needsReply || false);
                       }
@@ -213,9 +215,9 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                         ? 'bg-green-500/10 text-green-400 border-green-500/30'
                         : 'bg-gray-700/10 text-gray-500 border-gray-600/30'
                     } ${isOwnComment ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'} transition`}
-                    title={isOwnComment ? 'クリックで切り替え' : ''}
+                    title={isOwnComment ? `クリックで切り替え (現在: ${comment.needsReply})` : `(値: ${comment.needsReply})`}
                   >
-                    💬 {comment.needsReply ? '返信希望' : '返信不要'}
+                    💬 {comment.needsReply ? '返信希望' : '返信不要'} [{String(comment.needsReply)}]
                   </button>
                 )}
                 <span className="text-xs text-gray-500">

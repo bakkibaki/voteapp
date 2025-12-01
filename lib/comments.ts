@@ -24,7 +24,7 @@ export async function getAllComments(): Promise<Comment[]> {
     createdAt: comment.created_at,
     voteChanged: comment.vote_changed || false,
     votedOptionText: comment.voted_option_text,
-    needsReply: false, // 一時的にfalseに設定
+    needsReply: true, // デフォルトで異論を歓迎（DBにカラムがないため一時的）
   }));
 }
 
@@ -33,14 +33,14 @@ export async function getCommentsByVoteId(voteId: string): Promise<Comment[]> {
     .from('comments')
     .select('*')
     .eq('vote_id', voteId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false }); // 新しい投稿が上に来るように
 
   if (error) {
     console.error('Error fetching comments:', error);
     return [];
   }
 
-  return (data || []).map(comment => ({
+  const comments = (data || []).map(comment => ({
     id: comment.id,
     voteId: comment.vote_id,
     userId: comment.user_id,
@@ -52,8 +52,12 @@ export async function getCommentsByVoteId(voteId: string): Promise<Comment[]> {
     createdAt: comment.created_at,
     voteChanged: comment.vote_changed || false,
     votedOptionText: comment.voted_option_text,
-    needsReply: false, // 一時的にfalseに設定
+    needsReply: true, // デフォルトで異論を歓迎（DBにカラムがないため一時的）
   }));
+
+  console.log('getCommentsByVoteId - returning comments:', comments.map(c => ({ id: c.id, needsReply: c.needsReply })));
+
+  return comments;
 }
 
 export async function createComment(comment: Comment): Promise<Comment> {
@@ -100,7 +104,7 @@ export async function createComment(comment: Comment): Promise<Comment> {
     createdAt: data.created_at,
     voteChanged: data.vote_changed || false,
     votedOptionText: data.voted_option_text,
-    needsReply: false, // 一時的にfalseに設定
+    needsReply: comment.needsReply !== undefined ? comment.needsReply : true, // 投稿時の値を使用
   };
 }
 
@@ -202,6 +206,6 @@ export async function toggleCommentLike(
     createdAt: data.created_at,
     voteChanged: data.vote_changed || false,
     votedOptionText: data.voted_option_text,
-    needsReply: false, // 一時的にfalseに設定
+    needsReply: true, // デフォルトで異論を歓迎（DBにカラムがないため一時的）
   };
 }
