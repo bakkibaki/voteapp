@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Vote application built with Next.js",
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x",
+    "npm": ">=10.0.0"
   },
   "scripts": {
     "dev": "next dev",
