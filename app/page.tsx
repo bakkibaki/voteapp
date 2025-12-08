@@ -111,8 +111,12 @@ export default function Home() {
   };
 
   const handleCustomQuestionsComplete = async (answers: Record<string, string>, comment?: string, needsReply?: boolean) => {
+    // 最初にユーザー情報を取得して保存
+    const currentUser = getCurrentUser();
+
     console.log('Home page - handleCustomQuestionsComplete called:', {
       pendingVoteInfo: !!pendingVoteInfo,
+      hasCurrentUser: !!currentUser,
       answers,
       comment,
       needsReply,
@@ -123,8 +127,7 @@ export default function Home() {
       await submitVote(pendingVoteInfo.pollId, pendingVoteInfo.optionId, answers);
 
       // コメントがある場合は投稿
-      if (comment) {
-        const currentUser = getCurrentUser();
+      if (comment && currentUser) {
         console.log('Home page - Posting comment:', {
           hasCurrentUser: !!currentUser,
           comment,
