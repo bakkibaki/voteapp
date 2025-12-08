@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Edit2, BarChart3, MessageCircle, Calendar, FileText, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Edit2, BarChart3, MessageCircle, Calendar, FileText, ThumbsUp, Trash2 } from "lucide-react";
 import { getCurrentUser, hasUser, getAvatarOptions, updateUser } from "@/lib/user";
 import { Vote, Comment } from "@/lib/types";
 
@@ -22,6 +22,9 @@ export default function ProfilePage() {
   const [editRegion, setEditRegion] = useState("");
   const [editOccupation, setEditOccupation] = useState("");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [voteToDelete, setVoteToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const AGE_OPTIONS = ['25卒', '26卒', '27卒', '28卒', '29卒以降', '既卒'];
   const GENDER_OPTIONS = ['男性', '女性', 'その他', '回答しない'];
@@ -117,6 +120,42 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteClick = (voteId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setVoteToDelete(voteId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteVote = async () => {
+    if (!voteToDelete || isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/votes/${voteToDelete}/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("投票の削除に失敗しました");
+      }
+
+      // リストから削除
+      setVotes(votes.filter((v) => v.id !== voteToDelete));
+      setShowDeleteConfirm(false);
+      setVoteToDelete(null);
+    } catch (error) {
+      alert("エラーが発生しました");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!user) {
     return null;
   }
@@ -144,9 +183,12 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black">
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+          <button
+            onClick={() => router.push("/")}
+            className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent hover:opacity-80 transition"
+          >
             vote就活
-          </h1>
+          </button>
           <button
             onClick={() => router.push("/")}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition font-semibold"
@@ -412,20 +454,31 @@ export default function ProfilePage() {
                   {createdVotes.map((vote) => {
                     const totalVotes = vote.options.reduce((sum, opt) => sum + opt.votes, 0);
                     return (
-                      <button
+                      <div
                         key={vote.id}
-                        onClick={() => router.push(`/votes/${vote.id}`)}
-                        className="w-full text-left p-4 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 hover:border-cyan-500/50 transition"
+                        className="relative p-4 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 hover:border-cyan-500/50 transition group"
                       >
-                        <h4 className="font-semibold text-white mb-2">{vote.title}</h4>
-                        <div className="flex gap-4 text-sm text-gray-400">
-                          <span>{vote.options.length}個の選択肢</span>
-                          <span>•</span>
-                          <span>{totalVotes}票</span>
-                          <span>•</span>
-                          <span>{new Date(vote.createdAt).toLocaleDateString("ja-JP")}</span>
+                        <button
+                          onClick={(e) => handleDeleteClick(vote.id, e)}
+                          className="absolute top-3 right-3 p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100"
+                          title="削除"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <div
+                          onClick={() => router.push(`/votes/${vote.id}`)}
+                          className="cursor-pointer"
+                        >
+                          <h4 className="font-semibold text-white mb-2 pr-10">{vote.title}</h4>
+                          <div className="flex gap-4 text-sm text-gray-400">
+                            <span>{vote.options.length}個の選択肢</span>
+                            <span>•</span>
+                            <span>{totalVotes}票</span>
+                            <span>•</span>
+                            <span>{new Date(vote.createdAt).toLocaleDateString("ja-JP")}</span>
+                          </div>
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -434,6 +487,43 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-bold mb-2 text-red-500">投票を削除しますか？</h3>
+            <p className="text-gray-400 mb-4">
+              この操作は取り消せません。投票とすべてのコメントが完全に削除されます。
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setVoteToDelete(null);
+                }}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 text-gray-300 disabled:opacity-50 transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDeleteVote}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/50 disabled:opacity-50 flex items-center justify-center gap-2 font-semibold transition"
+              >
+                {isDeleting ? (
+                  "削除中..."
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    削除する
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
