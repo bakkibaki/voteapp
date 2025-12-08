@@ -26,6 +26,7 @@ export default function VoteDetailPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [showCustomQuestions, setShowCustomQuestions] = useState(false);
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
+  const [commentKey, setCommentKey] = useState(0);
 
   useEffect(() => {
     fetchVote();
@@ -184,18 +185,18 @@ export default function VoteDetailPage() {
 
   const handleCustomQuestionsComplete = async (answers: Record<string, string>, comment?: string, needsReply?: boolean) => {
     if (pendingOptionId) {
+      const optionId = pendingOptionId; // IDを保存
       setShowCustomQuestions(false);
-      setSelectedOption(pendingOptionId);
-      await submitVote(pendingOptionId, answers);
-      setPendingOptionId(null);
+      setSelectedOption(optionId);
+      await submitVote(optionId, answers);
 
       // コメントがある場合は投稿
       if (comment && vote) {
         const currentUser = getCurrentUser();
         if (currentUser) {
           try {
-            const votedOption = vote.options.find(opt => opt.id === pendingOptionId);
-            await fetch(`/api/votes/${params.id}/comments`, {
+            const votedOption = vote.options.find(opt => opt.id === optionId);
+            const response = await fetch(`/api/votes/${params.id}/comments`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -209,11 +210,18 @@ export default function VoteDetailPage() {
                 needsReply: needsReply,
               }),
             });
+
+            if (response.ok) {
+              // コメント投稿成功後、CommentSectionを更新
+              setCommentKey(prev => prev + 1);
+            }
           } catch (error) {
             console.error("Failed to post comment:", error);
           }
         }
       }
+
+      setPendingOptionId(null);
     }
   };
 
@@ -431,6 +439,7 @@ export default function VoteDetailPage() {
 
         {hasVoted && (
           <CommentSection
+            key={commentKey}
             voteId={vote.id}
             userVotedOptionText={votedOptionText}
             onCommentCountChange={setCommentCount}
