@@ -69,17 +69,10 @@ export default function VoteDetailPage() {
       return;
     }
 
-    // カスタム質問がある場合はモーダルを表示
-    if (vote?.customQuestions && vote.customQuestions.length > 0) {
-      console.log('Showing custom questions modal');
-      setPendingOptionId(optionId);
-      setShowCustomQuestions(true);
-      return;
-    }
-
-    console.log('No custom questions, submitting vote directly');
-    setSelectedOption(optionId);
-    submitVote(optionId);
+    // カスタム質問がある場合、またはコメント入力のためにモーダルを表示
+    console.log('Showing custom questions modal');
+    setPendingOptionId(optionId);
+    setShowCustomQuestions(true);
   };
 
   const submitVote = async (optionId: string, customAttributes?: Record<string, string>) => {
@@ -514,9 +507,9 @@ export default function VoteDetailPage() {
         </div>
       )}
 
-      {showCustomQuestions && vote?.customQuestions && (
+      {showCustomQuestions && vote && (
         <CustomQuestionModal
-          questions={vote.customQuestions}
+          questions={vote.customQuestions || []}
           onComplete={handleCustomQuestionsComplete}
           onCancel={() => {
             setShowCustomQuestions(false);

@@ -22,11 +22,13 @@ export default function CustomQuestionModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // すべての質問に回答しているかチェック
-    const allAnswered = questions.every((q) => answers[q.id]);
-    if (!allAnswered) {
-      alert("すべての質問に回答してください");
-      return;
+    // 質問がある場合のみ回答チェック
+    if (questions.length > 0) {
+      const allAnswered = questions.every((q) => answers[q.id]);
+      if (!allAnswered) {
+        alert("すべての質問に回答してください");
+        return;
+      }
     }
 
     onComplete(answers, comment.trim() || undefined, needsReply);
@@ -42,10 +44,14 @@ export default function CustomQuestionModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-white mb-4">投票前のアンケート</h2>
-        <p className="text-sm text-gray-400 mb-6">
-          投票者の傾向を把握するため、以下の質問にお答えください。
-        </p>
+        <h2 className="text-xl font-bold text-white mb-4">
+          {questions.length > 0 ? "投票前のアンケート" : "投票を確定"}
+        </h2>
+        {questions.length > 0 && (
+          <p className="text-sm text-gray-400 mb-6">
+            投票者の傾向を把握するため、以下の質問にお答えください。
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {questions.map((question) => (
@@ -77,7 +83,7 @@ export default function CustomQuestionModal({
           ))}
 
           {/* コメント入力欄 */}
-          <div className="pt-4 border-t border-gray-700">
+          <div className={questions.length > 0 ? "pt-4 border-t border-gray-700" : ""}>
             <div className="flex items-center gap-2 mb-3">
               <MessageCircle size={16} className="text-cyan-400" />
               <label className="text-sm font-semibold text-gray-300">
