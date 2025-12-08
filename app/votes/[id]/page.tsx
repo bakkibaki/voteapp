@@ -189,6 +189,11 @@ export default function VoteDetailPage() {
         if (currentUser) {
           try {
             const votedOption = vote.options.find(opt => opt.id === optionId);
+            console.log('Posting comment after vote:', {
+              comment,
+              votedOptionText: votedOption?.text,
+              needsReply,
+            });
             const response = await fetch(`/api/votes/${params.id}/comments`, {
               method: "POST",
               headers: {
@@ -204,14 +209,24 @@ export default function VoteDetailPage() {
               }),
             });
 
+            console.log('Comment post response:', response.status, response.ok);
             if (response.ok) {
+              const result = await response.json();
+              console.log('Comment posted successfully:', result);
               // コメント投稿成功後、CommentSectionを更新
               setCommentKey(prev => prev + 1);
+            } else {
+              const error = await response.text();
+              console.error('Comment post failed:', error);
             }
           } catch (error) {
             console.error("Failed to post comment:", error);
           }
+        } else {
+          console.log('No current user found for comment posting');
         }
+      } else {
+        console.log('No comment to post or vote not found', { comment, vote: !!vote });
       }
 
       setPendingOptionId(null);

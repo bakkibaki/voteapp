@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Heart, Reply, Send, X } from "lucide-react";
+import { MessageCircle, Heart, Reply, Send, X, ArrowUpDown } from "lucide-react";
 import { Comment } from "@/lib/types";
 import { getCurrentUser } from "@/lib/user";
 import { getRelativeTime } from "@/lib/dateUtils";
@@ -14,6 +14,8 @@ interface CommentSectionProps {
   onCommentCountChange?: (count: number) => void;
 }
 
+type SortType = "likes" | "replies" | "newest";
+
 export default function CommentSection({ voteId, userVotedOptionText, onCommentCountChange }: CommentSectionProps) {
   const router = useRouter();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -24,6 +26,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const [showNameSetup, setShowNameSetup] = useState(false);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const [needsReply, setNeedsReply] = useState(true); // デフォルトで異論を歓迎
+  const [sortBy, setSortBy] = useState<SortType>("likes"); // デフォルトはいいね順
 
   useEffect(() => {
     fetchComments();
@@ -170,6 +173,25 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const getReplies = (commentId: string) =>
     comments.filter((c) => c.parentId === commentId);
 
+  // コメントをソート
+  const sortedTopLevelComments = useMemo(() => {
+    const sorted = [...topLevelComments];
+
+    switch (sortBy) {
+      case "likes":
+        // いいね数順（降順）
+        return sorted.sort((a, b) => b.likes.length - a.likes.length);
+      case "replies":
+        // 返信数順（降順）
+        return sorted.sort((a, b) => getReplies(b.id).length - getReplies(a.id).length);
+      case "newest":
+        // 最新順
+        return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      default:
+        return sorted;
+    }
+  }, [topLevelComments, sortBy, comments]);
+
   const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => {
     const replies = getReplies(comment.id);
     const isLiked = currentUser ? comment.likes.includes(currentUser.id) : false;
@@ -277,11 +299,27 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   return (
     <>
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mt-4">
-        <div className="flex items-center gap-2 mb-6">
-          <MessageCircle size={20} className="text-cyan-400" />
-          <h3 className="text-lg font-bold text-white">
-            コメント ({comments.length})
-          </h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <MessageCircle size={20} className="text-cyan-400" />
+            <h3 className="text-lg font-bold text-white">
+              コメント ({comments.length})
+            </h3>
+          </div>
+
+          {/* ソート選択 */}
+          <div className="flex items-center gap-2">
+            <ArrowUpDown size={16} className="text-gray-400" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortType)}
+              className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition"
+            >
+              <option value="likes">いいね順</option>
+              <option value="replies">コメント数順</option>
+              <option value="newest">最新順</option>
+            </select>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mb-6">
@@ -344,12 +382,12 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
         </form>
 
         <div className="space-y-4">
-          {topLevelComments.length === 0 ? (
+          {sortedTopLevelComments.length === 0 ? (
             <p className="text-center text-gray-500 py-8">
               まだコメントがありません
             </p>
           ) : (
-            topLevelComments.map((comment) => (
+            sortedTopLevelComments.map((comment) => (
               <CommentItem key={comment.id} comment={comment} />
             ))
           )}
