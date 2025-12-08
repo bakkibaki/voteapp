@@ -111,16 +111,35 @@ export default function Home() {
   };
 
   const handleCustomQuestionsComplete = async (answers: Record<string, string>, comment?: string, needsReply?: boolean) => {
+    console.log('Home page - handleCustomQuestionsComplete called:', {
+      pendingVoteInfo: !!pendingVoteInfo,
+      answers,
+      comment,
+      needsReply,
+      hasComment: !!comment,
+    });
+
     if (pendingVoteInfo) {
       await submitVote(pendingVoteInfo.pollId, pendingVoteInfo.optionId, answers);
 
       // コメントがある場合は投稿
       if (comment) {
         const currentUser = getCurrentUser();
+        console.log('Home page - Posting comment:', {
+          hasCurrentUser: !!currentUser,
+          comment,
+          needsReply,
+        });
+
         if (currentUser) {
           try {
             const votedOption = pendingVoteInfo.poll.options.find(opt => opt.id === pendingVoteInfo.optionId);
-            await fetch(`/api/votes/${pendingVoteInfo.pollId}/comments`, {
+            console.log('Home page - About to post comment:', {
+              pollId: pendingVoteInfo.pollId,
+              votedOptionText: votedOption?.text,
+            });
+
+            const response = await fetch(`/api/votes/${pendingVoteInfo.pollId}/comments`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -134,14 +153,29 @@ export default function Home() {
                 needsReply: needsReply,
               }),
             });
+
+            console.log('Home page - Comment post response:', response.status, response.ok);
+            if (response.ok) {
+              const result = await response.json();
+              console.log('Home page - Comment posted successfully:', result);
+            } else {
+              const error = await response.text();
+              console.error('Home page - Comment post failed:', error);
+            }
           } catch (error) {
             console.error("Failed to post comment:", error);
           }
+        } else {
+          console.log('Home page - No current user found');
         }
+      } else {
+        console.log('Home page - No comment to post');
       }
 
       setShowCustomQuestions(false);
       setPendingVoteInfo(null);
+    } else {
+      console.log('Home page - No pendingVoteInfo');
     }
   };
 
