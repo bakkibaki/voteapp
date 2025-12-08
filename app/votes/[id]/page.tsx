@@ -177,6 +177,14 @@ export default function VoteDetailPage() {
   };
 
   const handleCustomQuestionsComplete = async (answers: Record<string, string>, comment?: string, needsReply?: boolean) => {
+    console.log('handleCustomQuestionsComplete called:', {
+      pendingOptionId,
+      answers,
+      comment,
+      needsReply,
+      hasComment: !!comment,
+    });
+
     if (pendingOptionId) {
       const optionId = pendingOptionId; // IDを保存
       setShowCustomQuestions(false);

@@ -31,6 +31,13 @@ export default function CustomQuestionModal({
       }
     }
 
+    console.log('CustomQuestionModal - handleSubmit:', {
+      answers,
+      comment: comment.trim() || undefined,
+      needsReply,
+      hasComment: !!comment.trim(),
+    });
+
     onComplete(answers, comment.trim() || undefined, needsReply);
   };
 
