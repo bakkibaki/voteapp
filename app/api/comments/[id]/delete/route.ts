@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteComment } from "@/lib/comments";
 
+// Delete comment API route
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateComment } from "@/lib/comments";
 
+// Edit comment API route
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
