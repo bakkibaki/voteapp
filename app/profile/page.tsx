@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [voteToDelete, setVoteToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const AGE_OPTIONS = ['25卒', '26卒', '27卒', '28卒', '29卒以降', '既卒'];
   const GENDER_OPTIONS = ['男性', '女性', 'その他', '回答しない'];
@@ -154,6 +155,12 @@ export default function ProfilePage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleResetData = () => {
+    // localStorageをクリアしてホームに戻る
+    localStorage.clear();
+    router.push("/");
   };
 
   if (!user) {
@@ -484,9 +491,56 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+
+            {/* 危険ゾーン */}
+            <div className="mt-8 pt-6 border-t border-red-900/30">
+              <h3 className="text-lg font-bold text-red-500 mb-2">⚠️ 危険ゾーン</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                この操作は取り消せません。すべてのデータが削除され、新規ユーザーとして始めることができます。
+              </p>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="px-4 py-2 bg-red-600/10 border border-red-600/30 text-red-500 rounded-xl hover:bg-red-600/20 transition font-semibold"
+              >
+                すべてのデータをリセット
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-red-800 rounded-xl p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-bold mb-2 text-red-500">⚠️ データをリセットしますか？</h3>
+            <p className="text-gray-400 mb-4">
+              この操作により、以下のデータがすべて削除されます：
+            </p>
+            <ul className="text-sm text-gray-300 mb-4 space-y-1 list-disc list-inside">
+              <li>ユーザープロフィール情報</li>
+              <li>投票履歴</li>
+              <li>すべてのローカルデータ</li>
+            </ul>
+            <p className="text-sm text-yellow-400 mb-4">
+              ※ この操作は取り消せません。新規ユーザーとして最初からやり直すことができます。
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 text-gray-300 transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleResetData}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/50 font-semibold transition"
+              >
+                リセットする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
