@@ -554,9 +554,10 @@ export default function VoteDetailPage() {
         />
       )}
 
-      {showCustomQuestions && vote && (
+      {showCustomQuestions && vote && pendingOptionId && (
         <CustomQuestionModal
           questions={vote.customQuestions || []}
+          selectedOptionText={vote.options.find(opt => opt.id === pendingOptionId)?.text}
           onComplete={handleCustomQuestionsComplete}
           onCancel={() => {
             setShowCustomQuestions(false);

@@ -8,22 +8,27 @@ interface CustomQuestionModalProps {
   questions: CustomQuestion[];
   onComplete: (answers: Record<string, string>, comment?: string, needsReply?: boolean) => void;
   onCancel: () => void;
+  selectedOptionText?: string;
 }
 
 export default function CustomQuestionModal({
   questions,
   onComplete,
   onCancel,
+  selectedOptionText,
 }: CustomQuestionModalProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comment, setComment] = useState("");
   const [needsReply, setNeedsReply] = useState(false);
 
+  // 観覧用かどうかを判定
+  const isViewOnly = selectedOptionText === "観覧用";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 質問がある場合のみ回答チェック
-    if (questions.length > 0) {
+    // 観覧用の場合は質問をスキップ
+    if (!isViewOnly && questions.length > 0) {
       const allAnswered = questions.every((q) => answers[q.id]);
       if (!allAnswered) {
         alert("すべての質問に回答してください");
@@ -52,16 +57,20 @@ export default function CustomQuestionModal({
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-white mb-4">
-          {questions.length > 0 ? "投票前のアンケート" : "投票を確定"}
+          {isViewOnly ? "観覧用として投票" : questions.length > 0 ? "投票前のアンケート" : "投票を確定"}
         </h2>
-        {questions.length > 0 && (
+        {isViewOnly ? (
+          <p className="text-sm text-gray-400 mb-6">
+            観覧用を選択したため、アンケートはスキップされます。コメントのみ投稿できます。
+          </p>
+        ) : questions.length > 0 ? (
           <p className="text-sm text-gray-400 mb-6">
             投票者の傾向を把握するため、以下の質問にお答えください。
           </p>
-        )}
+        ) : null}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {questions.map((question) => (
+          {!isViewOnly && questions.map((question) => (
             <div key={question.id}>
               <label className="block text-sm font-semibold text-gray-300 mb-3">
                 {question.question}

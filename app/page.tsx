@@ -499,6 +499,7 @@ export default function Home() {
       {showCustomQuestions && pendingVoteInfo && (
         <CustomQuestionModal
           questions={pendingVoteInfo.poll.customQuestions || []}
+          selectedOptionText={pendingVoteInfo.poll.options.find(opt => opt.id === pendingVoteInfo.optionId)?.text}
           onComplete={handleCustomQuestionsComplete}
           onCancel={() => {
             setShowCustomQuestions(false);
