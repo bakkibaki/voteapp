@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Heart, Reply, Send, X, ArrowUpDown } from "lucide-react";
+import { MessageCircle, Heart, Reply, Send, X, ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { Comment } from "@/lib/types";
 import { getCurrentUser } from "@/lib/user";
 import { getRelativeTime } from "@/lib/dateUtils";
@@ -27,6 +27,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const [needsReply, setNeedsReply] = useState(true); // デフォルトで異論を歓迎
   const [sortBy, setSortBy] = useState<SortType>("likes"); // デフォルトはいいね順
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set()); // 展開されているコメントのID
 
   useEffect(() => {
     fetchComments();
@@ -192,10 +193,23 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
     }
   }, [topLevelComments, sortBy, comments]);
 
+  const toggleExpand = (commentId: string) => {
+    setExpandedComments((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId);
+      } else {
+        newSet.add(commentId);
+      }
+      return newSet;
+    });
+  };
+
   const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => {
     const replies = getReplies(comment.id);
     const isLiked = currentUser ? comment.likes.includes(currentUser.id) : false;
     const isOwnComment = currentUser && comment.userId === currentUser.id;
+    const isExpanded = expandedComments.has(comment.id);
 
     return (
       <div className={`${isReply ? "ml-12 mt-3" : ""}`}>
@@ -263,19 +277,28 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                 )}
               </button>
 
-              {!isReply && comment.needsReply && (
+              <button
+                onClick={() => setReplyTo(comment)}
+                disabled={!currentUser}
+                className="flex items-center gap-1 text-gray-400 hover:text-cyan-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Reply size={16} />
+                返信
+              </button>
+
+              {replies.length > 0 && (
                 <button
-                  onClick={() => setReplyTo(comment)}
-                  disabled={!currentUser}
-                  className="flex items-center gap-1 text-gray-400 hover:text-cyan-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => toggleExpand(comment.id)}
+                  className="flex items-center gap-1 text-gray-400 hover:text-cyan-400 transition"
                 >
-                  <Reply size={16} />
-                  返信
+                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  {replies.length}件の返信
+                  {isExpanded ? '隠す' : '表示'}
                 </button>
               )}
             </div>
 
-            {replies.length > 0 && (
+            {replies.length > 0 && isExpanded && (
               <div className="mt-3 space-y-3">
                 {replies.map((reply) => (
                   <CommentItem key={reply.id} comment={reply} isReply />
