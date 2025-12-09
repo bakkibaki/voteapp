@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Send, Lock } from "lucide-react";
-import { getCurrentUser } from "@/lib/user";
+import { getCurrentUser, hasUser } from "@/lib/user";
 import { suggestCategory } from "@/lib/categoryUtils";
 import { CustomQuestion } from "@/lib/types";
+import UserSetupModal from "@/components/UserSetupModal";
 
 const CATEGORIES = [
   '商社',
@@ -69,6 +70,14 @@ export default function CreateVotePage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [customQuestions, setCustomQuestions] = useState<CustomQuestionBuilder[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUserSetup, setShowUserSetup] = useState(false);
+
+  useEffect(() => {
+    // ユーザー登録チェック
+    if (!hasUser()) {
+      setShowUserSetup(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (title.trim()) {
@@ -226,6 +235,9 @@ export default function CreateVotePage() {
 
   return (
     <div className="min-h-screen bg-black">
+      {showUserSetup && (
+        <UserSetupModal onComplete={() => setShowUserSetup(false)} />
+      )}
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <button

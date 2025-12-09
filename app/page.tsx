@@ -8,6 +8,7 @@ import { hasUser, getCurrentUser } from '@/lib/user';
 import AdBanner from '@/components/AdBanner';
 import { getRelativeTime } from '@/lib/dateUtils';
 import CustomQuestionModal from '@/components/CustomQuestionModal';
+import UserSetupModal from '@/components/UserSetupModal';
 import { getTrendingCategories } from '@/lib/categoryUtils';
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
   const [showCustomQuestions, setShowCustomQuestions] = useState(false);
   const [pendingVoteInfo, setPendingVoteInfo] = useState<{ pollId: string; optionId: string; poll: Vote } | null>(null);
   const [categories, setCategories] = useState<string[]>(['すべて']);
+  const [showUserSetup, setShowUserSetup] = useState(false);
 
   useEffect(() => {
     fetchPolls();
@@ -52,6 +54,16 @@ export default function Home() {
 
   const handleVote = async (pollId: string, optionId: string) => {
     console.log('Home page - handleVote called:', { pollId, optionId });
+
+    // ユーザー登録チェック
+    if (!hasUser()) {
+      const poll = polls.find(p => p.id === pollId);
+      if (poll) {
+        setPendingVoteInfo({ pollId, optionId, poll });
+      }
+      setShowUserSetup(true);
+      return;
+    }
 
     const hadVoted = userVotes[pollId] !== undefined;
     const changedVote = hadVoted && userVotes[pollId] !== optionId;
@@ -464,6 +476,24 @@ export default function Home() {
             </div>
           </div>
         </div>
+      )}
+
+      {showUserSetup && (
+        <UserSetupModal
+          onComplete={() => {
+            setShowUserSetup(false);
+            // ユーザー登録完了後、投票モーダルを表示
+            if (pendingVoteInfo) {
+              if (pendingVoteInfo.poll.customQuestions && pendingVoteInfo.poll.customQuestions.length > 0) {
+                setShowCustomQuestions(true);
+              } else {
+                // カスタム質問がない場合は直接投票
+                submitVote(pendingVoteInfo.pollId, pendingVoteInfo.optionId);
+                setPendingVoteInfo(null);
+              }
+            }
+          }}
+        />
       )}
 
       {showCustomQuestions && pendingVoteInfo && (

@@ -8,6 +8,7 @@ import { getCurrentUser, hasUser } from "@/lib/user";
 import CustomQuestionModal from "@/components/CustomQuestionModal";
 import CommentSection from "@/components/CommentSection";
 import AnalyticsSection from "@/components/AnalyticsSection";
+import UserSetupModal from "@/components/UserSetupModal";
 import { getRelativeTime } from "@/lib/dateUtils";
 
 export default function VoteDetailPage() {
@@ -27,6 +28,7 @@ export default function VoteDetailPage() {
   const [showCustomQuestions, setShowCustomQuestions] = useState(false);
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
   const [commentKey, setCommentKey] = useState(0);
+  const [showUserSetup, setShowUserSetup] = useState(false);
 
   useEffect(() => {
     fetchVote();
@@ -62,6 +64,13 @@ export default function VoteDetailPage() {
     console.log('handleVoteClick called');
     console.log('vote?.customQuestions:', vote?.customQuestions);
     console.log('customQuestions length:', vote?.customQuestions?.length);
+
+    // ユーザー登録チェック
+    if (!hasUser()) {
+      setPendingOptionId(optionId);
+      setShowUserSetup(true);
+      return;
+    }
 
     if (userVote && userVote !== optionId) {
       setPendingVote(optionId);
@@ -531,6 +540,18 @@ export default function VoteDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showUserSetup && (
+        <UserSetupModal
+          onComplete={() => {
+            setShowUserSetup(false);
+            // ユーザー登録完了後、投票モーダルを表示
+            if (pendingOptionId) {
+              setShowCustomQuestions(true);
+            }
+          }}
+        />
       )}
 
       {showCustomQuestions && vote && (
