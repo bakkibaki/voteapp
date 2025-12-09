@@ -209,3 +209,92 @@ export async function toggleCommentLike(
     needsReply: true, // デフォルトで異論を歓迎（DBにカラムがないため一時的）
   };
 }
+
+export async function deleteComment(
+  commentId: string,
+  userId: string
+): Promise<boolean> {
+  // コメントの所有者確認
+  const { data: comment, error: fetchError } = await supabase
+    .from('comments')
+    .select('user_id')
+    .eq('id', commentId)
+    .single();
+
+  if (fetchError || !comment) {
+    console.error('Error fetching comment:', fetchError);
+    return false;
+  }
+
+  if (comment.user_id !== userId) {
+    console.error('User does not own this comment');
+    return false;
+  }
+
+  // コメントを削除
+  const { error: deleteError } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', commentId);
+
+  if (deleteError) {
+    console.error('Error deleting comment:', deleteError);
+    return false;
+  }
+
+  return true;
+}
+
+export async function updateComment(
+  commentId: string,
+  userId: string,
+  content: string
+): Promise<Comment | null> {
+  // コメントの所有者確認
+  const { data: comment, error: fetchError } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('id', commentId)
+    .single();
+
+  if (fetchError || !comment) {
+    console.error('Error fetching comment:', fetchError);
+    return null;
+  }
+
+  if (comment.user_id !== userId) {
+    console.error('User does not own this comment');
+    return null;
+  }
+
+  // コメントを更新
+  const { data, error: updateError } = await supabase
+    .from('comments')
+    .update({
+      content,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', commentId)
+    .select()
+    .single();
+
+  if (updateError || !data) {
+    console.error('Error updating comment:', updateError);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    voteId: data.vote_id,
+    userId: data.user_id,
+    userName: data.user_name,
+    userAvatar: data.user_avatar,
+    content: data.content,
+    parentId: data.parent_id,
+    likes: data.likes || [],
+    createdAt: data.created_at,
+    voteChanged: data.vote_changed || false,
+    votedOptionText: data.voted_option_text,
+    needsReply: true, // デフォルトで異論を歓迎（DBにカラムがないため一時的）
+  };
+}
