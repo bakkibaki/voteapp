@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Heart, Reply, Send, X, ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, Heart, Reply, Send, X, ArrowUpDown, ChevronDown, ChevronUp, Edit2, Trash2, Check } from "lucide-react";
 import { Comment } from "@/lib/types";
 import { getCurrentUser } from "@/lib/user";
 import { getRelativeTime } from "@/lib/dateUtils";
@@ -28,6 +28,8 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
   const [needsReply, setNeedsReply] = useState(true); // デフォルトで異論を歓迎
   const [sortBy, setSortBy] = useState<SortType>("likes"); // デフォルトはいいね順
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set()); // 展開されているコメントのID
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     fetchComments();
@@ -170,6 +172,68 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!currentUser) return;
+    if (!confirm("このコメントを削除しますか？")) return;
+
+    try {
+      const response = await fetch(`/api/comments/${commentId}/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+
+      if (response.ok) {
+        await fetchComments();
+      } else {
+        alert("コメントの削除に失敗しました");
+      }
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+      alert("エラーが発生しました");
+    }
+  };
+
+  const startEditComment = (comment: Comment) => {
+    setEditingComment(comment.id);
+    setEditContent(comment.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingComment(null);
+    setEditContent("");
+  };
+
+  const saveEdit = async (commentId: string) => {
+    if (!currentUser || !editContent.trim()) return;
+
+    try {
+      const response = await fetch(`/api/comments/${commentId}/edit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          content: editContent.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setEditingComment(null);
+        setEditContent("");
+        await fetchComments();
+      } else {
+        alert("コメントの編集に失敗しました");
+      }
+    } catch (error) {
+      console.error("Failed to edit comment:", error);
+      alert("エラーが発生しました");
+    }
+  };
+
   const topLevelComments = comments.filter((c) => !c.parentId);
   const getReplies = (commentId: string) =>
     comments.filter((c) => c.parentId === commentId);
@@ -210,6 +274,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
     const isLiked = currentUser ? comment.likes.includes(currentUser.id) : false;
     const isOwnComment = currentUser && comment.userId === currentUser.id;
     const isExpanded = expandedComments.has(comment.id);
+    const isEditing = editingComment === comment.id;
 
     return (
       <div className={`${isReply ? "ml-12 mt-3" : ""}`}>
@@ -259,8 +324,53 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
                 <span className="text-xs text-gray-500">
                   {getRelativeTime(comment.createdAt)}
                 </span>
+                {isOwnComment && !isEditing && (
+                  <div className="ml-auto flex items-center gap-1">
+                    <button
+                      onClick={() => startEditComment(comment)}
+                      className="p-1 text-gray-500 hover:text-cyan-400 transition"
+                      title="編集"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="p-1 text-gray-500 hover:text-red-500 transition"
+                      title="削除"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-gray-300">{comment.content}</p>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-900 border-2 border-cyan-500 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white text-sm resize-none"
+                    rows={3}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveEdit(comment.id)}
+                      className="px-3 py-1.5 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition flex items-center gap-1 text-sm"
+                    >
+                      <Check size={14} />
+                      保存
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="px-3 py-1.5 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition text-sm"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-300">{comment.content}</p>
+              )}
             </div>
 
             <div className="flex items-center gap-4 mt-2 text-sm">
@@ -321,7 +431,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
 
   return (
     <>
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mt-4">
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mt-4 pb-32">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <MessageCircle size={20} className="text-cyan-400" />
@@ -345,7 +455,23 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mb-6">
+        <div className="space-y-4 mb-6">
+          {sortedTopLevelComments.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">
+              まだコメントがありません
+            </p>
+          ) : (
+            sortedTopLevelComments.map((comment) => (
+              <CommentItem key={comment.id} comment={comment} />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* 固定コメント入力欄 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 z-20">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <form onSubmit={handleSubmit}>
           {replyTo && (
             <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -402,18 +528,7 @@ export default function CommentSection({ voteId, userVotedOptionText, onCommentC
               )}
             </div>
           </div>
-        </form>
-
-        <div className="space-y-4">
-          {sortedTopLevelComments.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              まだコメントがありません
-            </p>
-          ) : (
-            sortedTopLevelComments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
-            ))
-          )}
+          </form>
         </div>
       </div>
 

@@ -64,7 +64,7 @@ interface CustomQuestionBuilder extends CustomQuestion {
 export default function CreateVotePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [options, setOptions] = useState(["", ""]);
+  const [options, setOptions] = useState(["", "", "観覧用"]);
   const [category, setCategory] = useState("その他");
   const [showAnalytics, setShowAnalytics] = useState(true);
   const [isPrivate, setIsPrivate] = useState(false);
