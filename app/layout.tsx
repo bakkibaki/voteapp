@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+// import Script from "next/script"; // AdSense有効化時に使用
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,13 +28,13 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        {/* Google AdSense */}
-        <Script
+        {/* Google AdSense - 審査通過後に有効化 */}
+        {/* <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX"
           crossOrigin="anonymous"
           strategy="afterInteractive"
-        />
+        /> */}
         {children}
       </body>
     </html>

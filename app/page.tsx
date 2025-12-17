@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ThumbsUp, MessageCircle, Plus, Check, Search } from 'lucide-react';
 import { Vote } from '@/lib/types';
 import { hasUser, getCurrentUser } from '@/lib/user';
-import AdBanner from '@/components/AdBanner';
+// import AdBanner from '@/components/AdBanner'; // AdSense有効化時に使用
 import { getRelativeTime } from '@/lib/dateUtils';
 import CustomQuestionModal from '@/components/CustomQuestionModal';
 import UserSetupModal from '@/components/UserSetupModal';
@@ -327,7 +327,7 @@ export default function Home() {
             <>
               {filteredPolls.map((poll, index) => {
                 const totalVotes = getTotalVotes(poll);
-                const showAd = (index + 1) % 3 === 0 && index !== filteredPolls.length - 1;
+                // const showAd = (index + 1) % 3 === 0 && index !== filteredPolls.length - 1; // AdSense有効化時に使用
 
               return (
                 <>
@@ -417,7 +417,8 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                {showAd && (
+                {/* AdSense審査通過後に有効化 */}
+                {/* {showAd && (
                   <div key={`ad-${index}`}>
                     <AdBanner
                       dataAdSlot="1234567890"
@@ -425,7 +426,7 @@ export default function Home() {
                       dataFullWidthResponsive={true}
                     />
                   </div>
-                )}
+                )} */}
               </>
               );
             })}</>

@@ -121,7 +121,7 @@ export default function PrivacyPage() {
             </section>
 
             <div className="pt-6 border-t border-gray-700 text-sm text-gray-500">
-              制定日：2025年11月24日
+              制定日：2025年12月18日
             </div>
           </div>
         </div>
